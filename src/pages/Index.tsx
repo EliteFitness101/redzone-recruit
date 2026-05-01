@@ -1,16 +1,42 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Navbar } from "@/components/site/Navbar";
+import { Hero } from "@/components/site/Hero";
+import { Training } from "@/components/site/Training";
+import { Recruitment } from "@/components/site/Recruitment";
+import { Pricing } from "@/components/site/Pricing";
+import { Referral } from "@/components/site/Referral";
+import { Testimonials } from "@/components/site/Testimonials";
+import { Faq } from "@/components/site/Faq";
+import { Footer } from "@/components/site/Footer";
+import { useEffect } from "react";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  useEffect(() => {
+    document.title = "Martial X × RedZone Security — Train Like A Warrior. Get Paid Like A Pro.";
+    const meta =
+      document.querySelector('meta[name="description"]') ||
+      Object.assign(document.createElement("meta"), { name: "description" });
+    meta.setAttribute(
+      "content",
+      "Nigeria's premier combat fitness academy and licensed security recruitment pipeline. Train, certify and get deployed.",
+    );
+    if (!meta.parentNode) document.head.appendChild(meta);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <Navbar />
+      <main>
+        <Hero />
+        <Training />
+        <Recruitment />
+        <Pricing />
+        <Referral />
+        <Testimonials />
+        <Faq />
+      </main>
+      <Footer />
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
