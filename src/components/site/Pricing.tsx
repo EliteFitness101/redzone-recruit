@@ -1,50 +1,38 @@
 import { Check, Crown, Shield, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics";
 
 const tiers = [
   {
+    id: "basic",
     name: "Basic Warrior",
     price: "₦1,000",
     icon: Shield,
     desc: "Foundation combat fitness & discipline.",
-    features: [
-      "4-week core program",
-      "Basic combat conditioning",
-      "Telegram community access",
-      "Digital workbook",
-    ],
+    features: ["4-week core program", "Basic combat conditioning", "Telegram community access", "Digital workbook"],
     cta: "Start Basic",
     variant: "glass" as const,
   },
   {
+    id: "elite",
     name: "Elite Security Track",
     price: "₦10,000",
     icon: Zap,
     desc: "Full recruitment-ready track with placement priority.",
-    features: [
-      "12-week elite program",
-      "Tactical & defensive modules",
-      "RedZone vetting fast pass",
-      "Certificate of completion",
-      "Priority job placement",
-    ],
+    features: ["12-week elite program", "Tactical & defensive modules", "RedZone vetting fast pass", "Certificate of completion", "Priority job placement"],
     cta: "Go Elite",
     variant: "hero" as const,
     featured: true,
   },
   {
+    id: "vip",
     name: "VIP Fast Track",
     price: "₦30,000",
     icon: Crown,
     desc: "1-on-1 coaching, accelerated deployment.",
-    features: [
-      "6-week intensive",
-      "Personal coach & mentor",
-      "Close-protection module",
-      "Guaranteed deployment interview",
-      "Lifetime alumni network",
-    ],
+    features: ["6-week intensive", "Personal coach & mentor", "Close-protection module", "Guaranteed deployment interview", "Lifetime alumni network"],
     cta: "Claim VIP",
     variant: "gold" as const,
   },
@@ -79,12 +67,7 @@ export const Pricing = () => (
                 Most Popular
               </div>
             )}
-            <div
-              className={cn(
-                "h-12 w-12 rounded-xl flex items-center justify-center mb-5",
-                t.featured ? "bg-gradient-gold shadow-gold" : "bg-gradient-red shadow-red",
-              )}
-            >
+            <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-5", t.featured ? "bg-gradient-gold shadow-gold" : "bg-gradient-red shadow-red")}>
               <t.icon className={cn("h-6 w-6", t.featured ? "text-accent-foreground" : "text-primary-foreground")} />
             </div>
             <h3 className="font-display text-2xl font-bold">{t.name}</h3>
@@ -101,16 +84,22 @@ export const Pricing = () => (
                 </li>
               ))}
             </ul>
-            <Button variant={t.variant} size="lg" className="w-full mt-8">
-              {t.cta}
+            <Button variant={t.variant} size="lg" className="w-full mt-8" asChild>
+              <Link to={`/checkout?tier=${t.id}`} onClick={() => track("cta_click", { source: `pricing_${t.id}` })}>
+                {t.cta}
+              </Link>
             </Button>
           </div>
         ))}
       </div>
 
-      <p className="text-center text-xs text-muted-foreground mt-10 uppercase tracking-widest">
-        Powered by Paystack · Secure NGN payments
-      </p>
+      {/* Trust badges */}
+      <div className="mt-10 flex flex-wrap justify-center items-center gap-6 text-xs text-muted-foreground uppercase tracking-widest">
+        <span className="glass rounded-full px-4 py-1.5">🔒 Secure Paystack</span>
+        <span className="glass rounded-full px-4 py-1.5">✓ Licensed Recruiter</span>
+        <span className="glass rounded-full px-4 py-1.5">₦ NGN Only</span>
+        <span className="glass rounded-full px-4 py-1.5">📱 Mobile Optimized</span>
+      </div>
     </div>
   </section>
 );

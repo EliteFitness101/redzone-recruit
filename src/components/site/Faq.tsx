@@ -1,4 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Helmet } from "react-helmet-async";
 
 const faqs = [
   { q: "Is RedZone Security a licensed recruiter?", a: "Yes. We operate in compliance with Nigeria's private security regulations and partner only with licensed firms registered under the relevant authorities." },
@@ -11,6 +12,19 @@ const faqs = [
 
 export const Faq = () => (
   <section id="faq" className="relative py-24 md:py-32">
+    <Helmet>
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        })}
+      </script>
+    </Helmet>
     <div className="container max-w-3xl">
       <div className="text-center mb-14">
         <div className="inline-block glass rounded-full px-4 py-1.5 mb-5 text-xs uppercase tracking-[0.3em] text-gold">
@@ -23,11 +37,8 @@ export const Faq = () => (
 
       <Accordion type="single" collapsible className="space-y-3">
         {faqs.map((f, i) => (
-          <AccordionItem
-            key={i}
-            value={`item-${i}`}
-            className="glass rounded-xl px-6 border-none data-[state=open]:border-gold/30"
-          >
+          <AccordionItem key={i} value={`item-${i}`}
+            className="glass rounded-xl px-6 border-none data-[state=open]:border-gold/30">
             <AccordionTrigger className="text-left font-display font-semibold hover:no-underline hover:text-gold py-5">
               {f.q}
             </AccordionTrigger>

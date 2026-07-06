@@ -1,6 +1,9 @@
 import { ArrowRight, Send, Shield, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroImg from "@/assets/hero-warrior.jpg";
+import { tgLink } from "@/config/site";
+import { track } from "@/lib/analytics";
 
 export const Hero = () => {
   return (
@@ -44,17 +47,18 @@ export const Hero = () => {
 
           <div className="mt-10 flex flex-wrap gap-4 animate-fade-in [animation-delay:240ms]">
             <Button variant="hero" size="xl" asChild>
-              <a href="#pricing">
+              <Link to="/pricing" onClick={() => track("cta_click", { source: "hero_train" })}>
                 Start Training <ArrowRight className="ml-1" />
-              </a>
+              </Link>
             </Button>
             <Button variant="gold" size="xl" asChild>
-              <a href="#recruitment">
+              <Link to="/apply" onClick={() => track("cta_click", { source: "hero_apply" })}>
                 <Shield /> Apply for Security Jobs
-              </a>
+              </Link>
             </Button>
             <Button variant="glass" size="xl" asChild>
-              <a href="#telegram">
+              <a href={tgLink()} target="_blank" rel="noopener noreferrer"
+                onClick={() => track("telegram_click", { source: "hero" })}>
                 <Send /> Join Telegram
               </a>
             </Button>
