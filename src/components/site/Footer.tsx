@@ -1,4 +1,14 @@
+import { Link } from "react-router-dom";
 import { Instagram, MessageCircle, Send, Shield, Music2 } from "lucide-react";
+import { CONTACT, waLink, tgLink } from "@/config/site";
+import { track } from "@/lib/analytics";
+
+const socials = [
+  { Icon: Instagram, label: "Instagram", href: CONTACT.instagram, event: "cta_click" as const },
+  { Icon: Music2, label: "TikTok", href: CONTACT.tiktok, event: "cta_click" as const },
+  { Icon: Send, label: "Telegram", href: tgLink(), event: "telegram_click" as const },
+  { Icon: MessageCircle, label: "WhatsApp", href: waLink("Hi Martial X!"), event: "whatsapp_click" as const },
+];
 
 export const Footer = () => (
   <footer className="relative border-t border-border/50 mt-10">
@@ -13,9 +23,7 @@ export const Footer = () => (
               <div className="font-display font-bold tracking-wider">
                 MARTIAL <span className="text-gradient-gold">X</span>
               </div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                × RedZone Security
-              </div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">× RedZone Security</div>
             </div>
           </div>
           <p className="text-sm text-muted-foreground max-w-md">
@@ -23,18 +31,10 @@ export const Footer = () => (
             Nigeria's pipeline from training mat to professional deployment.
           </p>
           <div className="flex items-center gap-3 mt-6">
-            {[
-              { Icon: Instagram, label: "Instagram" },
-              { Icon: Music2, label: "TikTok" },
-              { Icon: Send, label: "Telegram" },
-              { Icon: MessageCircle, label: "WhatsApp" },
-            ].map(({ Icon, label }) => (
-              <a
-                key={label}
-                href="#"
-                aria-label={label}
-                className="h-10 w-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-gold hover:border-gold/40 transition-colors"
-              >
+            {socials.map(({ Icon, label, href, event }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
+                onClick={() => track(event, { source: "footer" })}
+                className="h-10 w-10 rounded-lg glass flex items-center justify-center text-muted-foreground hover:text-gold hover:border-gold/40 transition-colors">
                 <Icon className="h-4 w-4" />
               </a>
             ))}
@@ -44,20 +44,22 @@ export const Footer = () => (
         <div>
           <h4 className="font-display font-bold uppercase tracking-widest text-sm mb-4">Platform</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><a href="#training" className="hover:text-gold">Training Academy</a></li>
-            <li><a href="#recruitment" className="hover:text-gold">Recruitment Portal</a></li>
-            <li><a href="#pricing" className="hover:text-gold">Pricing</a></li>
-            <li><a href="#" className="hover:text-gold">Admin Dashboard</a></li>
+            <li><Link to="/academy" className="hover:text-gold">Training Academy</Link></li>
+            <li><Link to="/apply" className="hover:text-gold">Recruitment Portal</Link></li>
+            <li><Link to="/pricing" className="hover:text-gold">Pricing</Link></li>
+            <li><Link to="/dashboard" className="hover:text-gold">Dashboard</Link></li>
+            <li><Link to="/referrals" className="hover:text-gold">Referrals</Link></li>
+            <li><Link to="/contact" className="hover:text-gold">Contact</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="font-display font-bold uppercase tracking-widest text-sm mb-4">Legal</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><a href="#" className="hover:text-gold">Terms of Service</a></li>
-            <li><a href="#" className="hover:text-gold">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-gold">Recruitment Policy</a></li>
-            <li><a href="#" className="hover:text-gold">Refund Policy</a></li>
+            <li><Link to="/contact" className="hover:text-gold">Terms of Service</Link></li>
+            <li><Link to="/contact" className="hover:text-gold">Privacy Policy</Link></li>
+            <li><Link to="/contact" className="hover:text-gold">Recruitment Policy</Link></li>
+            <li><Link to="/contact" className="hover:text-gold">Refund Policy</Link></li>
           </ul>
         </div>
       </div>
