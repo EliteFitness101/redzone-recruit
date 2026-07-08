@@ -194,8 +194,8 @@ export default function Admin() {
               />
               <h3 className="font-display uppercase tracking-widest text-sm mt-8 mb-3">Courses</h3>
               <Table
-                cols={["Title", "Tier", "Published"]}
-                rows={courses.map((c) => [c.title, c.tier, c.published ? "Yes" : "No"])}
+                cols={["Title", "Required tier", "Published"]}
+                rows={courses.map((c) => [c.title, c.required_tier, c.published ? "Yes" : "No"])}
               />
             </TabsContent>
 
@@ -248,8 +248,8 @@ export default function Admin() {
                 cols={["User", "Firm", "Role", "Status", "Started"]}
                 rows={deployments.map((d) => [
                   nameFor(d.user_id),
-                  d.firm ?? "—",
-                  d.role ?? "—",
+                  d.firm_name ?? "—",
+                  d.role_title ?? "—",
                   d.status ?? "—",
                   d.start_date ? new Date(d.start_date).toLocaleDateString() : "—",
                 ])}
