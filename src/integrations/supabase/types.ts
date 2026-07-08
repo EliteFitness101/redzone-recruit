@@ -341,6 +341,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      resolve_referral: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "affiliate" | "student" | "customer"
