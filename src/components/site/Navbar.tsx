@@ -18,7 +18,8 @@ const links = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { session } = useAuth();
+  const { session, roles } = useAuth();
+  const isAdmin = roles.includes("admin");
   const loc = useLocation();
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export const Navbar = () => {
           <div className="hidden lg:flex items-center gap-3">
             {session ? (
               <Button variant="glass" size="sm" asChild>
-                <Link to="/dashboard"><User className="h-4 w-4" /> Dashboard</Link>
+                <Link to={isAdmin ? "/admin" : "/dashboard"}><User className="h-4 w-4" /> {isAdmin ? "Admin" : "Dashboard"}</Link>
               </Button>
             ) : (
               <Button variant="glass" size="sm" asChild>

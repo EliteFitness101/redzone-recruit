@@ -12,12 +12,25 @@ const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+const MAKE_WEBHOOK = "https://hook.eu1.make.com/p0c26asklninfrxhp2sw6nkdjjb19a89";
 
 const TIER_AMOUNTS: Record<string, number> = {
   basic: 100_000,
   elite: 1_000_000,
   vip: 3_000_000,
 };
+
+async function fireAutomation(payload: unknown) {
+  try {
+    await fetch(MAKE_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    console.error("[make-webhook] failed", e);
+  }
+}
 
 async function getUserId(req: Request): Promise<string | null> {
   const auth = req.headers.get("Authorization");
@@ -95,6 +108,12 @@ Deno.serve(async (req) => {
       if (!ps.status) return json({ error: ps.message ?? "verify_failed" }, 502);
 
       const status = ps.data.status === "success" ? "success" : "failed";
+
+      // Idempotency: skip finalisation work if already marked success
+      const { data: existing } = await admin
+        .from("orders").select("status").eq("reference", reference).maybeSingle();
+      const alreadyDone = existing?.status === "success";
+
       const { data: order } = await admin
         .from("orders")
         .update({ status, paystack_response: ps.data })
@@ -102,18 +121,15 @@ Deno.serve(async (req) => {
         .select()
         .maybeSingle();
 
-      if (status === "success" && order?.user_id) {
-        // Idempotent enrollment
+      if (status === "success" && order?.user_id && !alreadyDone) {
         await admin.from("enrollments").upsert(
           { user_id: order.user_id, tier: order.tier, order_id: order.id, active: true },
           { onConflict: "user_id,tier" as never, ignoreDuplicates: true } as never,
         );
-        // student role
         await admin.from("user_roles").upsert(
           { user_id: order.user_id, role: "student" },
           { onConflict: "user_id,role" as never, ignoreDuplicates: true } as never,
         );
-        // referral commission (10% credit to affiliate)
         if (order.referral_code) {
           const { data: affiliate } = await admin
             .from("profiles").select("id").eq("referral_code", order.referral_code).maybeSingle();
@@ -126,6 +142,18 @@ Deno.serve(async (req) => {
             });
           }
         }
+        await fireAutomation({
+          event: "payment_success",
+          reference,
+          email: order.email,
+          tier: order.tier,
+          amount_kobo: order.amount_kobo,
+          user_id: order.user_id,
+          referral_code: order.referral_code,
+        });
+      }
+      if (status === "failed") {
+        await fireAutomation({ event: "payment_failed", reference, email: order?.email });
       }
       return json({ status, order });
     }
