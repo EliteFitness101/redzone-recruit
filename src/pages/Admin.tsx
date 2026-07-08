@@ -65,7 +65,7 @@ export default function Admin() {
 
   const totalCommissionKobo = referrals.reduce((s, r) => s + (r.commission_kobo ?? 0), 0);
   const paidCommissionKobo = referrals
-    .filter((r) => r.paid)
+    .filter((r) => r.status === "paid")
     .reduce((s, r) => s + (r.commission_kobo ?? 0), 0);
 
   const nameFor = (uid?: string | null) =>
@@ -96,7 +96,7 @@ export default function Admin() {
     loadAll();
   }
   async function markCommissionPaid(id: string) {
-    const { error } = await supabase.from("referrals").update({ paid: true }).eq("id", id);
+    const { error } = await supabase.from("referrals").update({ status: "paid" }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Marked paid");
     loadAll();
@@ -201,13 +201,13 @@ export default function Admin() {
 
             <TabsContent value="referrals">
               <Table
-                cols={["Affiliate", "Referred", "Commission", "Paid", ""]}
+                cols={["Affiliate", "Referred", "Commission", "Status", ""]}
                 rows={referrals.map((r) => [
                   nameFor(r.affiliate_id),
                   nameFor(r.referred_user_id),
                   `₦${(r.commission_kobo / 100).toLocaleString()}`,
-                  r.paid ? "Yes" : "No",
-                  !r.paid && (
+                  r.status,
+                  r.status !== "paid" && (
                     <Button key={r.id} variant="glass" size="sm" onClick={() => markCommissionPaid(r.id)}>
                       Mark paid
                     </Button>
