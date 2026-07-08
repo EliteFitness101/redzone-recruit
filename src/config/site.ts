@@ -8,13 +8,12 @@ export const SITE = {
     "Nigeria's premier combat fitness academy and licensed security recruitment pipeline. Train, certify and get deployed.",
 };
 
-// TODO: replace placeholders with real handles
 export const CONTACT = {
-  whatsappNumber: "2348000000000", // international format, no +
-  telegramHandle: "MartialXBot",
-  telegramGroup: "https://t.me/martialx",
+  whatsappNumber: "2348132255842", // international format, no +
+  telegramHandle: "EliteNGRecruitBot",
+  telegramGroup: "https://t.me/EliteNGRecruitBot",
   email: "recruit@resofit.fit",
-  phone: "+2348000000000",
+  phone: "+2348132255842",
   instagram: "https://instagram.com/martialx",
   tiktok: "https://tiktok.com/@martialx",
   addressLagos: "Lagos, Nigeria",
@@ -27,9 +26,9 @@ export const tgLink = () => `https://t.me/${CONTACT.telegramHandle}`;
 
 // TODO: paste real IDs when ready
 export const ANALYTICS = {
-  ga4: "", // e.g. "G-XXXXXXX"
-  metaPixel: "", // e.g. "1234567890"
-  tiktokPixel: "", // e.g. "CXXXXXXXX"
+  ga4: "",
+  metaPixel: "",
+  tiktokPixel: "",
 };
 
 export const TIERS = {

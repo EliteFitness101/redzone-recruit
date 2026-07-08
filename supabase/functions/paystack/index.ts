@@ -12,12 +12,25 @@ const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+const MAKE_WEBHOOK = "https://hook.eu1.make.com/p0c26asklninfrxhp2sw6nkdjjb19a89";
 
 const TIER_AMOUNTS: Record<string, number> = {
   basic: 100_000,
   elite: 1_000_000,
   vip: 3_000_000,
 };
+
+async function fireAutomation(payload: unknown) {
+  try {
+    await fetch(MAKE_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    console.error("[make-webhook] failed", e);
+  }
+}
 
 async function getUserId(req: Request): Promise<string | null> {
   const auth = req.headers.get("Authorization");
