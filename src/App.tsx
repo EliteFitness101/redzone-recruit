@@ -17,6 +17,9 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
 const Academy = lazy(() => import("./pages/Academy"));
+const CoursePage = lazy(() => import("./pages/CoursePage"));
+const LessonPage = lazy(() => import("./pages/LessonPage"));
+const CertificatePage = lazy(() => import("./pages/CertificatePage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const Apply = lazy(() => import("./pages/Apply"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -78,6 +81,9 @@ const App = () => {
                     <Route path="/" element={<Index />} />
                     <Route path="/pricing" element={<PricingPage />} />
                     <Route path="/academy" element={<Academy />} />
+                    <Route path="/academy/:slug" element={<CoursePage />} />
+                    <Route path="/academy/:slug/:lessonSlug" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
+                    <Route path="/certificate/:code" element={<CertificatePage />} />
                     <Route path="/apply" element={<Apply />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/checkout" element={<Checkout />} />

@@ -75,11 +75,18 @@ export default function Academy() {
                   {c.duration_weeks && <p className="text-xs uppercase tracking-widest text-muted-foreground mt-3">{c.duration_weeks} weeks</p>}
                   <div className="mt-5">
                     {unlocked ? (
-                      <Button variant="hero" size="sm">Start module</Button>
-                    ) : (
-                      <Button variant="gold" size="sm" asChild>
-                        <Link to={`/checkout?tier=${c.required_tier}`}>Unlock — enroll</Link>
+                      <Button variant="hero" size="sm" asChild>
+                        <Link to={`/academy/${c.slug}`}>Start module</Link>
                       </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button variant="glass" size="sm" asChild>
+                          <Link to={`/academy/${c.slug}`}>Preview</Link>
+                        </Button>
+                        <Button variant="gold" size="sm" asChild>
+                          <Link to={`/checkout?tier=${c.required_tier}`}>Unlock</Link>
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
