@@ -17,6 +17,9 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
 const Academy = lazy(() => import("./pages/Academy"));
+const CoursePage = lazy(() => import("./pages/CoursePage"));
+const LessonPage = lazy(() => import("./pages/LessonPage"));
+const CertificatePage = lazy(() => import("./pages/CertificatePage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const Apply = lazy(() => import("./pages/Apply"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
