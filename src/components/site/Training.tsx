@@ -1,12 +1,12 @@
-import { Dumbbell, Flame, Swords, Target, Timer, Trophy } from "lucide-react";
+import { Crown, Handshake, Radio, Shield, Siren, Swords } from "lucide-react";
 
 const programs = [
-  { icon: Flame, title: "Combat Conditioning", desc: "High-intensity striking, grappling and tactical cardio built for real-world stamina." },
-  { icon: Swords, title: "Martial Discipline", desc: "Boxing, MMA fundamentals, defensive tactics and edged-weapon awareness." },
-  { icon: Target, title: "Tactical Drills", desc: "Patrol movement, perimeter control, hostile de-escalation and response timing." },
-  { icon: Dumbbell, title: "Strength Forge", desc: "Functional strength, calisthenics and load-bearing endurance." },
-  { icon: Timer, title: "Speed & Reflex", desc: "Reaction training, situational awareness, scenario-based decisioning." },
-  { icon: Trophy, title: "Certification", desc: "Issued completion certificate recognized across our deployment partners." },
+  { icon: Shield, title: "Basic Security Training", desc: "Guarding doctrine, access control, patrol discipline and reporting fundamentals." },
+  { icon: Swords, title: "Elite Security Track", desc: "Advanced defensive tactics, threat assessment and recruitment-ready certification." },
+  { icon: Crown, title: "VIP Protection", desc: "Close protection craft: advance work, formations, embus/debus and route planning." },
+  { icon: Radio, title: "Tactical Communication", desc: "Radio procedure, incident escalation, command handover and clear field reporting." },
+  { icon: Siren, title: "Emergency Response", desc: "First aid, fire response, evacuation control and crisis decision-making under pressure." },
+  { icon: Handshake, title: "Conflict Management", desc: "De-escalation, lawful use of force, crowd handling and professional conduct." },
 ];
 
 export const Training = () => (
@@ -14,14 +14,14 @@ export const Training = () => (
     <div className="container">
       <div className="max-w-3xl mb-16">
         <div className="inline-block glass rounded-full px-4 py-1.5 mb-5 text-xs uppercase tracking-[0.3em] text-gold">
-          01 — Martial X Academy
+          Training Academy
         </div>
         <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight">
-          Combat fitness designed to <span className="text-gradient-red">forge professionals</span>.
+          Six programs that <span className="text-gradient-red">forge professionals</span>.
         </h2>
         <p className="mt-5 text-lg text-muted-foreground">
-          Six progressive disciplines. One operator-grade outcome. Whether you're chasing
-          a security contract or a stronger version of yourself, every drop of sweat compounds.
+          From first-day guarding fundamentals to executive protection. Every program is
+          certified, assessed and mapped to a paid deployment pathway.
         </p>
       </div>
 
