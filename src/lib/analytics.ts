@@ -12,7 +12,10 @@ type EventName =
   | "telegram_click"
   | "phone_click"
   | "email_click"
+  | "application_start"
   | "application_submit"
+  | "view_content"
+  | "call_click"
   | "signup"
   | "login";
 
@@ -42,6 +45,10 @@ export function track(event: EventName, params: Params = {}) {
         ? "CompleteRegistration"
         : event === "application_submit"
         ? "Lead"
+        : event === "view_content"
+        ? "ViewContent"
+        : event === "application_start"
+        ? "InitiateCheckout"
         : "CustomEvent";
     window.fbq?.("track", metaEvent, params);
     // TikTok Pixel
@@ -52,6 +59,10 @@ export function track(event: EventName, params: Params = {}) {
         ? "InitiateCheckout"
         : event === "signup"
         ? "CompleteRegistration"
+        : event === "application_submit"
+        ? "SubmitForm"
+        : event === "view_content"
+        ? "ViewContent"
         : "ClickButton";
     window.ttq?.track(ttEvent, params);
     // Console breadcrumb in dev
