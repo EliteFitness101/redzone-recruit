@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { FloatingWhatsApp } from "@/components/site/FloatingWhatsApp";
 import { initAnalytics, track } from "@/lib/analytics";
+import { captureAttribution } from "@/lib/attribution";
 import { Loader2 } from "lucide-react";
 
 import Index from "./pages/Index";
@@ -43,6 +44,7 @@ const Fallback = () => (
 const ReferralCapture = () => {
   const [sp] = useSearchParams();
   useEffect(() => {
+    captureAttribution(window.location.search);
     const ref = sp.get("ref");
     if (ref) {
       localStorage.setItem("mx_ref", ref);
