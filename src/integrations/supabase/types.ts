@@ -14,9 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      application_activity: {
+        Row: {
+          actor: string | null
+          application_id: string
+          created_at: string
+          event: string
+          id: string
+          metadata: Json
+          notes: string | null
+        }
+        Insert: {
+          actor?: string | null
+          application_id: string
+          created_at?: string
+          event: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+        }
+        Update: {
+          actor?: string | null
+          application_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          metadata?: Json
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_activity_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           age: number
+          assigned_recruiter: string | null
+          attribution: Json
+          campaign: string | null
+          cohort: string | null
           created_at: string
           education: string
           email: string | null
@@ -27,12 +69,21 @@ export type Database = {
           notes: string | null
           phone: string
           prior_experience: string | null
+          program: string | null
+          reference_number: string | null
+          source: string | null
+          stage: string
           status: string
+          tags: string[]
           updated_at: string
           user_id: string | null
         }
         Insert: {
           age: number
+          assigned_recruiter?: string | null
+          attribution?: Json
+          campaign?: string | null
+          cohort?: string | null
           created_at?: string
           education: string
           email?: string | null
@@ -43,12 +94,21 @@ export type Database = {
           notes?: string | null
           phone: string
           prior_experience?: string | null
+          program?: string | null
+          reference_number?: string | null
+          source?: string | null
+          stage?: string
           status?: string
+          tags?: string[]
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           age?: number
+          assigned_recruiter?: string | null
+          attribution?: Json
+          campaign?: string | null
+          cohort?: string | null
           created_at?: string
           education?: string
           email?: string | null
@@ -59,7 +119,12 @@ export type Database = {
           notes?: string | null
           phone?: string
           prior_experience?: string | null
+          program?: string | null
+          reference_number?: string | null
+          source?: string | null
+          stage?: string
           status?: string
+          tags?: string[]
           updated_at?: string
           user_id?: string | null
         }
@@ -236,6 +301,53 @@ export type Database = {
           },
         ]
       }
+      interviews: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          interviewer: string | null
+          meeting_link: string | null
+          notes: string | null
+          outcome: string
+          scheduled_at: string
+          score: number | null
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          interviewer?: string | null
+          meeting_link?: string | null
+          notes?: string | null
+          outcome?: string
+          scheduled_at: string
+          score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          interviewer?: string | null
+          meeting_link?: string | null
+          notes?: string | null
+          outcome?: string
+          scheduled_at?: string
+          score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed_at: string | null
@@ -389,6 +501,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          audience: string
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          metadata: Json
+          read_at: string | null
+          recipient: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          recipient?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          recipient?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
       }
       orders: {
         Row: {
@@ -608,6 +759,36 @@ export type Database = {
           },
         ]
       }
+      recruiters: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_name: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_name: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_name?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           affiliate_id: string
@@ -675,6 +856,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_application: {
+        Args: { _app: string; _user: string }
+        Returns: boolean
+      }
       has_course_access: {
         Args: { _course: string; _user: string }
         Returns: boolean
@@ -686,6 +871,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_recruiter: { Args: { _user: string }; Returns: boolean }
       issue_certificate: {
         Args: { _course: string }
         Returns: {
@@ -705,6 +891,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      recruitment_stats: { Args: never; Returns: Json }
       resolve_referral: { Args: { _code: string }; Returns: string }
     }
     Enums: {
