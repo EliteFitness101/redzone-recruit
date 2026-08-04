@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { SEO } from "@/components/SEO";
@@ -107,9 +108,15 @@ export default function Admin() {
       <SEO title="Admin Console" path="/admin" description="Admin operations console" />
       <Navbar />
       <main className="pt-28 pb-24 container">
-        <div className="mb-8">
-          <div className="text-xs uppercase tracking-widest text-gold">Operations</div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold">Admin Console</h1>
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="text-xs uppercase tracking-widest text-gold">Operations</div>
+            <h1 className="font-display text-3xl md:text-4xl font-bold">Admin Console</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="glass" size="sm" asChild><Link to="/admin/applications">Applicant dashboard</Link></Button>
+            <Button variant="glass" size="sm" asChild><Link to="/admin/reports">Reports</Link></Button>
+          </div>
         </div>
 
         {loading ? (
