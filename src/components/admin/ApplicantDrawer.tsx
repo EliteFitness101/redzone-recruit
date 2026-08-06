@@ -15,16 +15,21 @@ import {
   addNote,
   changeStage,
   listActivity,
-  listInterviews,
   parseLegacyNotes,
-  scheduleInterview,
   updateApplication,
   type ActivityEvent,
   type Application,
-  type Interview,
   type Recruiter,
   type Stage,
 } from "@/lib/recruitment";
+import {
+  listAuditLogs,
+  runApplicationAutomation,
+  type AuditEntry,
+} from "@/lib/recruitmentOps";
+import { InterviewPanel } from "@/components/admin/InterviewPanel";
+import { DocumentsPanel } from "@/components/admin/DocumentsPanel";
+import { TasksPanel } from "@/components/admin/TasksPanel";
 import { waLink } from "@/config/site";
 
 const selectCls =
@@ -42,27 +47,28 @@ export const ApplicantDrawer = ({
   onChanged: () => void;
 }) => {
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
-  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [tagInput, setTagInput] = useState("");
-  const [when, setWhen] = useState("");
-  const [link, setLink] = useState("");
 
   const app = application;
   const legacy = parseLegacyNotes(app?.notes ?? null);
 
+  const refresh = async (id: string) => {
+    const [a, l] = await Promise.all([listActivity(id), listAuditLogs({ entity_id: id })]);
+    setActivity(a);
+    setAudit(l);
+  };
+
   useEffect(() => {
     if (!app) return;
     setLoading(true);
-    Promise.all([listActivity(app.id), listInterviews(app.id)])
-      .then(([a, i]) => {
-        setActivity(a);
-        setInterviews(i);
-      })
+    refresh(app.id)
       .catch((e) => toast.error(e.message))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.id]);
 
   async function run(fn: () => Promise<void>, msg: string) {
@@ -71,9 +77,7 @@ export const ApplicantDrawer = ({
     try {
       await fn();
       toast.success(msg);
-      const [a, i] = await Promise.all([listActivity(app.id), listInterviews(app.id)]);
-      setActivity(a);
-      setInterviews(i);
+      await refresh(app.id);
       onChanged();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Something went wrong");
@@ -81,6 +85,7 @@ export const ApplicantDrawer = ({
       setBusy(false);
     }
   }
+
 
   return (
     <Sheet open={!!app} onOpenChange={(o) => !o && onClose()}>
@@ -108,7 +113,11 @@ export const ApplicantDrawer = ({
                 <TabsTrigger value="actions">Actions</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="interviews">Interviews</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                <TabsTrigger value="audit">Audit</TabsTrigger>
               </TabsList>
+
 
               <TabsContent value="profile" className="space-y-3 pt-4 text-sm">
                 <Field label="Email" value={app.email ?? "—"} />
@@ -286,29 +295,21 @@ export const ApplicantDrawer = ({
                     Save note
                   </Button>
                 </div>
-                <div className="glass rounded-xl p-4">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                    Schedule interview
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} aria-label="Interview date and time" />
-                    <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Meeting link" aria-label="Meeting link" />
-                  </div>
+                <div className="glass rounded-xl p-4 space-y-2">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Automation</div>
+                  <p className="text-xs text-muted-foreground">
+                    Re-run the post-submission workflow (confirmation email, staff alert, Make &amp; ChatB2K webhooks, CRM sync).
+                  </p>
                   <Button
-                    className="mt-3"
-                    variant="tactical"
-                    disabled={busy || !when}
-                    onClick={() =>
-                      run(async () => {
-                        await scheduleInterview({ application_id: app.id, scheduled_at: when, meeting_link: link });
-                        setWhen("");
-                        setLink("");
-                      }, "Interview scheduled")
-                    }
+                    variant="glass"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => run(async () => { await runApplicationAutomation(app.id, true); }, "Automation re-queued")}
                   >
-                    Schedule
+                    Re-run automation
                   </Button>
                 </div>
+
                 <div className="flex gap-2">
                   <Button variant="glass" disabled={busy} onClick={() => run(() => changeStage(app.id, "accepted"), "Marked accepted")}>
                     Mark accepted
@@ -346,28 +347,47 @@ export const ApplicantDrawer = ({
                 )}
               </TabsContent>
 
-              <TabsContent value="interviews" className="pt-4">
-                {interviews.length === 0 ? (
-                  <Empty>No interviews scheduled.</Empty>
+              <TabsContent value="interviews">
+                <InterviewPanel applicationId={app.id} applicantName={app.full_name} onChanged={onChanged} />
+              </TabsContent>
+
+              <TabsContent value="documents">
+                <DocumentsPanel applicationId={app.id} canReview />
+              </TabsContent>
+
+              <TabsContent value="tasks">
+                <TasksPanel applicationId={app.id} recruiters={recruiters} />
+              </TabsContent>
+
+              <TabsContent value="audit" className="pt-4">
+                {audit.length === 0 ? (
+                  <Empty>No audit entries recorded yet.</Empty>
                 ) : (
-                  <ul className="space-y-3">
-                    {interviews.map((i) => (
-                      <li key={i.id} className="glass rounded-xl p-3 text-sm">
-                        <div className="flex justify-between gap-2">
-                          <span>{new Date(i.scheduled_at).toLocaleString()}</span>
-                          <Badge variant="secondary" className="text-[10px] uppercase">{i.outcome}</Badge>
+                  <ol className="space-y-2">
+                    {audit.map((a) => (
+                      <li key={a.id} className="glass rounded-xl p-3 text-sm">
+                        <div className="flex justify-between gap-3">
+                          <span className="font-medium">{a.action.replace(/_/g, " ")}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(a.created_at).toLocaleString()}
+                          </span>
                         </div>
-                        {i.meeting_link && (
-                          <a className="text-gold text-xs break-all" href={i.meeting_link} target="_blank" rel="noopener noreferrer">
-                            {i.meeting_link}
-                          </a>
+                        <div className="text-xs text-muted-foreground">
+                          {a.actor_email ?? "system"} · {a.entity_type}
+                          {a.ip_address ? ` · ${a.ip_address}` : ""}
+                        </div>
+                        {a.reason && <p className="text-xs mt-1">{a.reason}</p>}
+                        {(a.previous_value || a.new_value) && (
+                          <pre className="text-[10px] text-muted-foreground mt-1 overflow-x-auto">
+                            {JSON.stringify({ from: a.previous_value, to: a.new_value })}
+                          </pre>
                         )}
-                        {i.score != null && <div className="text-xs text-muted-foreground">Score: {i.score}</div>}
                       </li>
                     ))}
-                  </ul>
+                  </ol>
                 )}
               </TabsContent>
+
             </Tabs>
           </>
         )}
