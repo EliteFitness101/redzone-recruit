@@ -52,6 +52,71 @@ export type Database = {
           },
         ]
       }
+      application_documents: {
+        Row: {
+          application_id: string
+          created_at: string
+          doc_type: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          scan_status: string
+          size_bytes: number
+          status: string
+          updated_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          doc_type: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scan_status?: string
+          size_bytes?: number
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          doc_type?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          scan_status?: string
+          size_bytes?: number
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           age: number
@@ -129,6 +194,107 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor: string | null
+          actor_email: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          new_value: Json | null
+          previous_value: Json | null
+          reason: string | null
+          request_id: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          actor_email?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          actor_email?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          request_id?: string | null
+        }
+        Relationships: []
+      }
+      automation_runs: {
+        Row: {
+          application_id: string | null
+          attempts: number
+          channel: string
+          created_at: string
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          payload: Json
+          response: Json | null
+          status: string
+          updated_at: string
+          workflow: string
+        }
+        Insert: {
+          application_id?: string | null
+          attempts?: number
+          channel?: string
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          payload?: Json
+          response?: Json | null
+          status?: string
+          updated_at?: string
+          workflow: string
+        }
+        Update: {
+          application_id?: string | null
+          attempts?: number
+          channel?: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          payload?: Json
+          response?: Json | null
+          status?: string
+          updated_at?: string
+          workflow?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       certificates: {
         Row: {
@@ -305,37 +471,64 @@ export type Database = {
         Row: {
           application_id: string
           created_at: string
+          duration_minutes: number
           id: string
+          interview_type: string
           interviewer: string | null
+          location: string | null
           meeting_link: string | null
           notes: string | null
           outcome: string
+          reminder_sent_at: string | null
+          rescheduled_from: string | null
+          round: number
           scheduled_at: string
           score: number | null
+          scorecard: Json
+          status: string
+          timezone: string
           updated_at: string
         }
         Insert: {
           application_id: string
           created_at?: string
+          duration_minutes?: number
           id?: string
+          interview_type?: string
           interviewer?: string | null
+          location?: string | null
           meeting_link?: string | null
           notes?: string | null
           outcome?: string
+          reminder_sent_at?: string | null
+          rescheduled_from?: string | null
+          round?: number
           scheduled_at: string
           score?: number | null
+          scorecard?: Json
+          status?: string
+          timezone?: string
           updated_at?: string
         }
         Update: {
           application_id?: string
           created_at?: string
+          duration_minutes?: number
           id?: string
+          interview_type?: string
           interviewer?: string | null
+          location?: string | null
           meeting_link?: string | null
           notes?: string | null
           outcome?: string
+          reminder_sent_at?: string | null
+          rescheduled_from?: string | null
+          round?: number
           scheduled_at?: string
           score?: number | null
+          scorecard?: Json
+          status?: string
+          timezone?: string
           updated_at?: string
         }
         Relationships: [
@@ -344,6 +537,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_rescheduled_from_fkey"
+            columns: ["rescheduled_from"]
+            isOneToOne: false
+            referencedRelation: "interviews"
             referencedColumns: ["id"]
           },
         ]
@@ -759,6 +959,56 @@ export type Database = {
           },
         ]
       }
+      recruiter_tasks: {
+        Row: {
+          application_id: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          details: string | null
+          due_at: string | null
+          id: string
+          priority: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruiter_tasks_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recruiters: {
         Row: {
           active: boolean
@@ -891,6 +1141,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      recruitment_ops_stats: { Args: never; Returns: Json }
       recruitment_stats: { Args: never; Returns: Json }
       resolve_referral: { Args: { _code: string }; Returns: string }
     }
