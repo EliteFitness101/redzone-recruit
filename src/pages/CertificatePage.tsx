@@ -10,8 +10,8 @@ export default function CertificatePage() {
   const [cert, setCert] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    supabase.from("certificates").select("*").eq("certificate_code", code).maybeSingle()
-      .then(({ data }) => { setCert(data); setLoading(false); });
+    (supabase.rpc as any)("verify_certificate", { _code: code })
+      .then(({ data }: any) => { setCert(Array.isArray(data) ? data[0] ?? null : data ?? null); setLoading(false); });
   }, [code]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-gold" /></div>;
