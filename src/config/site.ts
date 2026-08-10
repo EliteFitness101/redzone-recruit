@@ -2,7 +2,7 @@
 export const SITE = {
   name: "Martial X × RedZone Security",
   shortName: "Martial X",
-  domain: "https://redzone-recruit.lovable.app",
+  domain: "https://martial.resofit.fit",
   tagline: "Train Like A Warrior. Get Paid Like A Professional.",
   description:
     "Nigeria's premier combat fitness academy and licensed security recruitment pipeline. Train, certify and get deployed.",

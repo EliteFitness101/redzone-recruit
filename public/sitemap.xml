@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://redzone-recruit.lovable.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://redzone-recruit.lovable.app/pricing</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://redzone-recruit.lovable.app/academy</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://redzone-recruit.lovable.app/apply</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://redzone-recruit.lovable.app/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://redzone-recruit.lovable.app/login</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://redzone-recruit.lovable.app/register</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://martial.resofit.fit/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://martial.resofit.fit/apply</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://martial.resofit.fit/pricing</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://martial.resofit.fit/academy</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://martial.resofit.fit/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 </urlset>
