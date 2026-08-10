@@ -24,7 +24,7 @@ export default function CertificatePage() {
     </div>
   );
 
-  const revoked = !!cert.revoked_at;
+  const revoked = cert.valid === false;
   return (
     <div className="min-h-screen bg-background text-foreground p-6 print:p-0 print:bg-white">
       <SEO title={`Certificate ${cert.certificate_code}`} path={`/certificate/${code}`} />
@@ -48,7 +48,7 @@ export default function CertificatePage() {
               <div><div className="text-[10px] uppercase tracking-widest text-muted-foreground">Issued</div><div>{new Date(cert.issued_at).toLocaleDateString()}</div></div>
               <div><div className="text-[10px] uppercase tracking-widest text-muted-foreground">Certificate ID</div><div className="font-tactical">{cert.certificate_code}</div></div>
             </div>
-            {revoked && <div className="mt-6 text-destructive uppercase tracking-widest text-sm">Revoked on {new Date(cert.revoked_at).toLocaleDateString()}</div>}
+            {revoked && <div className="mt-6 text-destructive uppercase tracking-widest text-sm">This certificate has been revoked</div>}
             <div className="mt-10 flex items-center justify-center gap-2 text-xs text-muted-foreground print:text-gray-700">
               <ShieldCheck className="h-4 w-4 text-gold" /> Verify at /certificate/{cert.certificate_code}
             </div>
