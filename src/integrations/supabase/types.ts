@@ -1144,6 +1144,16 @@ export type Database = {
       recruitment_ops_stats: { Args: never; Returns: Json }
       recruitment_stats: { Args: never; Returns: Json }
       resolve_referral: { Args: { _code: string }; Returns: string }
+      verify_certificate: {
+        Args: { _code: string }
+        Returns: {
+          certificate_code: string
+          course_title: string
+          issued_at: string
+          recipient_name: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "affiliate" | "student" | "customer"

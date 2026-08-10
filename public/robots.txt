@@ -5,5 +5,9 @@ Disallow: /profile
 Disallow: /referrals
 Disallow: /checkout
 Disallow: /payment/
+Disallow: /admin
+Disallow: /api/
+Disallow: /login
+Disallow: /register
 
-Sitemap: https://redzone-recruit.lovable.app/sitemap.xml
+Sitemap: https://martial.resofit.fit/sitemap.xml

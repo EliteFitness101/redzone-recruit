@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ArrowRight, MessageCircle, ShieldCheck, BadgeCheck, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,17 @@ const badges = [
 ];
 
 export const Hero = () => {
+  const [showVideo, setShowVideo] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setShowVideo(!mq.matches);
+    apply();
+    mq.addEventListener?.("change", apply);
+    return () => mq.removeEventListener?.("change", apply);
+  }, []);
+
   return (
     <section id="top" className="relative min-h-[92vh] flex items-center pt-28 pb-16 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-hero" />
@@ -23,7 +35,23 @@ export const Hero = () => {
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-screen"
       />
+      {showVideo && (
+        <video
+          src="/videos/martial-x-hero-8s.mp4"
+          poster={heroImg}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          tabIndex={-1}
+          onError={() => setShowVideo(false)}
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-screen"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+
 
       <div className="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-primary/30 blur-[140px] animate-float" />
       <div className="absolute bottom-0 -left-32 w-[420px] h-[420px] rounded-full bg-gold/15 blur-[140px] animate-float" />
