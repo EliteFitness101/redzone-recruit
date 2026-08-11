@@ -38,16 +38,18 @@ const tiers = [
   },
 ];
 
-export const Pricing = () => (
+export const Pricing = ({ asH1 = false }: { asH1?: boolean } = {}) => {
+  const Heading = asH1 ? "h1" : "h2";
+  return (
   <section id="pricing" className="relative py-24 md:py-32">
     <div className="container">
       <div className="text-center max-w-2xl mx-auto mb-16">
         <div className="inline-block glass rounded-full px-4 py-1.5 mb-5 text-xs uppercase tracking-[0.3em] text-gold">
           03 — Training Tiers
         </div>
-        <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight">
+        <Heading className="font-display text-4xl md:text-6xl font-bold leading-tight">
           Pick your <span className="text-gradient-red">arena</span>.
-        </h2>
+        </Heading>
         <p className="mt-5 text-lg text-muted-foreground">
           Secure payments via Paystack. Lifetime course access. No hidden fees.
         </p>
