@@ -76,7 +76,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 bg-gradient-hero">
-      <SEO title={tab === "login" ? "Login" : "Register"} path={`/${tab}`} />
+      <SEO title={tab === "login" ? "Login" : "Register"} path={`/${tab}`} noindex />
       <div className="glass-strong rounded-3xl w-full max-w-md p-8">
         <Link to="/" className="flex items-center gap-2 mb-6">
           <div className="h-10 w-10 rounded-lg bg-gradient-red flex items-center justify-center shadow-red">

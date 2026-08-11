@@ -30,7 +30,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SEO title="Dashboard" path="/dashboard" />
+      <SEO title="Dashboard" path="/dashboard" noindex />
       <Navbar />
       <main className="pt-28 pb-24 container">
         <div className="flex items-center justify-between mb-10 flex-wrap gap-3">

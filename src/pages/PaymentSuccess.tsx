@@ -29,7 +29,7 @@ export default function PaymentSuccess() {
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-gradient-hero flex items-center justify-center p-6">
-      <SEO title={state === "ok" ? "Payment Successful" : "Payment Status"} path="/payment/success" />
+      <SEO title={state === "ok" ? "Payment Successful" : "Payment Status"} path="/payment/success" noindex />
       <div className="glass-strong rounded-3xl p-10 max-w-md text-center">
         {state === "loading" && (
           <>

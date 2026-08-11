@@ -44,7 +44,7 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-gradient-hero">
-      <SEO title={`Checkout — ${tier.name}`} path="/checkout" />
+      <SEO title={`Checkout — ${tier.name}`} path="/checkout" noindex />
       <div className="container py-16 max-w-2xl">
         <Button variant="ghost" size="sm" onClick={() => nav(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4" /> Back

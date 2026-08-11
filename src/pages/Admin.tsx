@@ -105,7 +105,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SEO title="Admin Console" path="/admin" description="Admin operations console" />
+      <SEO title="Admin Console" path="/admin" description="Admin operations console" noindex />
       <Navbar />
       <main className="pt-28 pb-24 container">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">

@@ -36,7 +36,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SEO title="Profile" path="/profile" />
+      <SEO title="Profile" path="/profile" noindex />
       <Navbar />
       <main className="pt-28 pb-24 container max-w-2xl">
         <h1 className="font-display text-4xl font-bold mb-6">Profile</h1>
