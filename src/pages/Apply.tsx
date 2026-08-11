@@ -11,7 +11,7 @@ export default function Apply() {
       <SEO title="Apply for Security Deployment" path="/apply" description="Submit your recruitment application to RedZone Security. Get vetted, trained and deployed to licensed firms in Nigeria." />
       <Navbar />
       <main className="pt-24">
-        <Recruitment />
+        <Recruitment asH1 />
       </main>
       <Footer />
     </div>

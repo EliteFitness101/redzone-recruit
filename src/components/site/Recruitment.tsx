@@ -38,7 +38,8 @@ const schema = z.object({
   fitness_level: z.string().min(2, "Select your fitness level"),
 });
 
-export const Recruitment = () => {
+export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
+  const Heading = asH1 ? "h1" : "h2";
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
   const started = useRef(false);
@@ -112,9 +113,9 @@ export const Recruitment = () => {
             <div className="inline-block glass rounded-full px-4 py-1.5 mb-5 text-xs uppercase tracking-[0.3em] text-gold">
               Recruitment Application
             </div>
-            <h2 className="font-display text-3xl md:text-5xl font-bold leading-tight">
+            <Heading className="font-display text-3xl md:text-5xl font-bold leading-tight">
               Apply once. <span className="text-gradient-gold">Get deployed</span> for life.
-            </h2>
+            </Heading>
             <p className="mt-5 text-muted-foreground md:text-lg max-w-xl">
               We screen, train and deploy disciplined recruits to Nigeria's most reputable
               security firms. Fully licensed. Fully compliant.

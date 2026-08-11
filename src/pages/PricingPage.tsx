@@ -16,7 +16,7 @@ export default function PricingPage() {
       />
       <Navbar />
       <main className="pt-24">
-        <Pricing />
+        <Pricing asH1 />
       </main>
       <Footer />
     </div>

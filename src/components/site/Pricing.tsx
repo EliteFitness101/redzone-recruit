@@ -105,3 +105,4 @@ export const Pricing = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     </div>
   </section>
 );
+};
