@@ -44,7 +44,7 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-gradient-hero">
-      <SEO title={`Checkout — ${tier.name}`} path="/checkout" />
+      <SEO title={`Checkout — ${tier.name}`} path="/checkout" noindex />
       <div className="container py-16 max-w-2xl">
         <Button variant="ghost" size="sm" onClick={() => nav(-1)} className="mb-6">
           <ArrowLeft className="h-4 w-4" /> Back
@@ -78,7 +78,9 @@ export default function Checkout() {
               {busy ? <Loader2 className="animate-spin" /> : `Pay ₦${tier.price.toLocaleString()} via Paystack`}
             </Button>
             <p className="text-[11px] text-muted-foreground text-center">
-              Secured by Paystack · Cards, Transfer, USSD supported
+              Secured by Paystack · Cards, Transfer, USSD supported. By paying you accept the{" "}
+              <Link to="/legal/academy-terms" className="text-gold underline underline-offset-2">Academy Terms</Link> and{" "}
+              <Link to="/legal/refund-policy" className="text-gold underline underline-offset-2">Refund Policy</Link>.
             </p>
             {!user && (
               <p className="text-xs text-center text-muted-foreground">

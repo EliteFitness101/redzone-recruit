@@ -7,16 +7,20 @@ interface Props {
   path?: string;
   jsonLd?: object;
   image?: string;
+  /** Private/transactional routes: keep out of the index. */
+  noindex?: boolean;
 }
 
-export const SEO = ({ title, description = SITE.description, path = "/", jsonLd, image }: Props) => {
+export const SEO = ({ title, description = SITE.description, path = "/", jsonLd, image, noindex }: Props) => {
   const url = `${SITE.domain}${path}`;
   const fullTitle = title.includes(SITE.shortName) ? title : `${title} — ${SITE.shortName}`;
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
       <link rel="canonical" href={url} />
+
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />

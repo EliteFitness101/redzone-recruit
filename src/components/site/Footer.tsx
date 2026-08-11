@@ -56,10 +56,14 @@ export const Footer = () => (
         <div>
           <h4 className="font-display font-bold uppercase tracking-widest text-sm mb-4">Legal</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/contact" className="hover:text-gold">Terms of Service</Link></li>
-            <li><Link to="/contact" className="hover:text-gold">Privacy Policy</Link></li>
-            <li><Link to="/contact" className="hover:text-gold">Recruitment Policy</Link></li>
-            <li><Link to="/contact" className="hover:text-gold">Refund Policy</Link></li>
+            <li><Link to="/legal/terms-and-conditions" className="hover:text-gold">Terms &amp; Conditions</Link></li>
+            <li><Link to="/legal/privacy-policy" className="hover:text-gold">Privacy Policy</Link></li>
+            <li><Link to="/legal/recruitment-policy" className="hover:text-gold">Recruitment Policy</Link></li>
+            <li><Link to="/legal/refund-policy" className="hover:text-gold">Refund Policy</Link></li>
+            <li><Link to="/legal/cookie-policy" className="hover:text-gold">Cookie Policy</Link></li>
+            <li><Link to="/legal/safeguarding" className="hover:text-gold">Safeguarding</Link></li>
+            <li><Link to="/legal/certificate-verification" className="hover:text-gold">Certificate Verification</Link></li>
+            <li><Link to="/legal" className="hover:text-gold">All Policies</Link></li>
           </ul>
         </div>
       </div>

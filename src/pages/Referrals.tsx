@@ -26,7 +26,7 @@ export default function Referrals() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SEO title="Referrals" path="/referrals" />
+      <SEO title="Referrals" path="/referrals" noindex />
       <Navbar />
       <main className="pt-28 pb-24 container max-w-4xl">
         <div className="mb-8">

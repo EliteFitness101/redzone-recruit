@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
+import { Link } from "react-router-dom";
 import { waLink, tgLink } from "@/config/site";
 
 const perks = [
@@ -37,7 +38,8 @@ const schema = z.object({
   fitness_level: z.string().min(2, "Select your fitness level"),
 });
 
-export const Recruitment = () => {
+export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
+  const Heading = asH1 ? "h1" : "h2";
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
   const started = useRef(false);
@@ -111,9 +113,9 @@ export const Recruitment = () => {
             <div className="inline-block glass rounded-full px-4 py-1.5 mb-5 text-xs uppercase tracking-[0.3em] text-gold">
               Recruitment Application
             </div>
-            <h2 className="font-display text-3xl md:text-5xl font-bold leading-tight">
+            <Heading className="font-display text-3xl md:text-5xl font-bold leading-tight">
               Apply once. <span className="text-gradient-gold">Get deployed</span> for life.
-            </h2>
+            </Heading>
             <p className="mt-5 text-muted-foreground md:text-lg max-w-xl">
               We screen, train and deploy disciplined recruits to Nigeria's most reputable
               security firms. Fully licensed. Fully compliant.
@@ -233,7 +235,11 @@ export const Recruitment = () => {
                 {busy ? <Loader2 className="animate-spin" /> : "Submit Application"}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
-                By applying you agree to RedZone Security's vetting and licensing policy.
+                By applying you agree to the{" "}
+                <Link to="/legal/candidate-terms" className="text-gold underline underline-offset-2">Candidate Terms</Link>,{" "}
+                <Link to="/legal/recruitment-policy" className="text-gold underline underline-offset-2">Recruitment Policy</Link> and{" "}
+                <Link to="/legal/privacy-policy" className="text-gold underline underline-offset-2">Privacy Policy</Link>,
+                including RedZone Security's vetting and licensing checks.
               </p>
             </form>
           </div>

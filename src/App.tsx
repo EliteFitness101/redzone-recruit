@@ -26,6 +26,7 @@ const Apply = lazy(() => import("./pages/Apply"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Legal = lazy(() => import("./pages/Legal"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
@@ -90,6 +91,8 @@ const App = () => {
                     <Route path="/certificate/:code" element={<CertificatePage />} />
                     <Route path="/apply" element={<Apply />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/legal" element={<Legal />} />
+                    <Route path="/legal/:slug" element={<Legal />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/payment/success" element={<PaymentSuccess />} />
                     <Route path="/payment/cancel" element={<PaymentCancel />} />
