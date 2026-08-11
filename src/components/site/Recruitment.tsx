@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
+import { Link } from "react-router-dom";
 import { waLink, tgLink } from "@/config/site";
 
 const perks = [
@@ -233,7 +234,11 @@ export const Recruitment = () => {
                 {busy ? <Loader2 className="animate-spin" /> : "Submit Application"}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
-                By applying you agree to RedZone Security's vetting and licensing policy.
+                By applying you agree to the{" "}
+                <Link to="/legal/candidate-terms" className="text-gold underline underline-offset-2">Candidate Terms</Link>,{" "}
+                <Link to="/legal/recruitment-policy" className="text-gold underline underline-offset-2">Recruitment Policy</Link> and{" "}
+                <Link to="/legal/privacy-policy" className="text-gold underline underline-offset-2">Privacy Policy</Link>,
+                including RedZone Security's vetting and licensing checks.
               </p>
             </form>
           </div>

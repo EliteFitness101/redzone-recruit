@@ -126,6 +126,12 @@ export default function Auth() {
               <Button type="submit" variant="gold" size="lg" className="w-full" disabled={busy}>
                 {busy ? <Loader2 className="animate-spin" /> : "Create Account"}
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center">
+                By creating an account you agree to the{" "}
+                <Link to="/legal/terms-and-conditions" className="text-gold underline underline-offset-2">Terms &amp; Conditions</Link>,{" "}
+                <Link to="/legal/privacy-policy" className="text-gold underline underline-offset-2">Privacy Policy</Link> and{" "}
+                <Link to="/legal/cookie-policy" className="text-gold underline underline-offset-2">Cookie Policy</Link>.
+              </p>
             </form>
           </TabsContent>
         </Tabs>
