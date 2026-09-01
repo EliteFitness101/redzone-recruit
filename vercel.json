@@ -5,6 +5,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/social-cover.jpg",
+      "destination": "https://storage.googleapis.com/gpt-engineer-file-uploads/nRf9Kqb4dUZlPzXWxd3uyLHErkg1/social-images/social-1778282901294-martial-x-hero-banner-combat-gainer.webp"
+    },
+    {
       "source": "/((?!api/|assets/|videos/|favicon\\.ico|robots\\.txt|sitemap\\.xml|placeholder\\.svg|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
