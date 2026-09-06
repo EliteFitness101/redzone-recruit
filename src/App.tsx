@@ -57,13 +57,14 @@ const ReferralCapture = () => {
   return null;
 };
 
-// Fire pageview on route change for analytics
+// Fire a TikTok/Meta/GA page view on every SPA route change.
 const RouteTracker = () => {
   const loc = useLocation();
   useEffect(() => {
-    window.gtag?.("event", "page_view", { page_path: loc.pathname });
-    window.fbq?.("track", "PageView");
-    window.ttq?.track("Pageview");
+    const page = { page_path: loc.pathname, page_location: window.location.href };
+    window.gtag?.("event", "page_view", page);
+    window.fbq?.("track", "PageView", page);
+    window.ttq?.track("PageView", page);
   }, [loc.pathname]);
   return null;
 };
