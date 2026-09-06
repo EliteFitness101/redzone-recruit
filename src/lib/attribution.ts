@@ -8,6 +8,7 @@ export interface Attribution {
   utm_term?: string;
   utm_content?: string;
   gclid?: string;
+  ttclid?: string;
   rsid?: string;
   funnel_origin?: string;
   landing_page?: string;
@@ -22,6 +23,7 @@ const FIELDS = [
   "utm_term",
   "utm_content",
   "gclid",
+  "ttclid",
   "rsid",
   "funnel_origin",
 ] as const;
