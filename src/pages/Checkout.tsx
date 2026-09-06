@@ -18,11 +18,25 @@ export default function Checkout() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const { user } = useAuth();
-  const tierId = (sp.get("tier") as TierId) || "elite";
-  const tier = TIERS[tierId] ?? TIERS.elite;
+  const requestedTier = sp.get("tier");
+  const tierId = requestedTier && requestedTier in TIERS ? (requestedTier as TierId) : null;
+  const tier = tierId ? TIERS[tierId] : null;
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState(user?.email ?? "");
   const referral = sp.get("ref") ?? localStorage.getItem("mx_ref") ?? undefined;
+
+  if (!tier) {
+    return (
+      <div className="min-h-screen bg-background text-foreground bg-gradient-hero flex items-center justify-center p-6">
+        <SEO title="Checkout — Offer Not Found" path="/checkout" noindex />
+        <div className="glass-strong rounded-3xl p-10 max-w-md text-center">
+          <h1 className="font-display text-2xl font-bold mb-3">Offer not found</h1>
+          <p className="text-muted-foreground mb-6">This checkout offer is unavailable. Choose an active training offer to continue.</p>
+          <Button variant="hero" size="lg" onClick={() => nav("/pricing")}>View training offers</Button>
+        </div>
+      </div>
+    );
+  }
 
   const start = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,7 +73,7 @@ export default function Checkout() {
             {referral && <p className="text-xs text-gold">Referral applied: {referral}</p>}
             <Button type="submit" variant="hero" size="xl" className="w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : `Pay ₦${tier.price.toLocaleString()} via Paystack`}</Button>
             <p className="text-[11px] text-muted-foreground text-center">Secured by Paystack · Cards, Transfer, USSD supported. By paying you accept the <Link to="/legal/academy-terms" className="text-gold underline underline-offset-2">Academy Terms</Link> and <Link to="/legal/refund-policy" className="text-gold underline underline-offset-2">Refund Policy</Link>.</p>
-            {!user && <p className="text-xs text-center text-muted-foreground">Have an account? <Link className="text-gold underline" to={`/login?next=/checkout?tier=${tier.id}`}>Sign in</Link> for faster checkout.</p>}
+            {!user && <p className="text-xs text-center text-muted-foreground">Have an account? <Link className="text-gold underline" to={`/login?next=${encodeURIComponent(`/checkout?tier=${tier.id}`)}`}>Sign in</Link> for faster checkout.</p>}
           </form>
         </div>
       </div>
