@@ -24,11 +24,12 @@ export const waLink = (msg: string) =>
 
 export const tgLink = () => `https://t.me/${CONTACT.telegramHandle}`;
 
-// TODO: paste real IDs when ready
+// Public analytics IDs are injected at build time from Vercel environment variables.
+// No tracking identifier is committed to source control.
 export const ANALYTICS = {
-  ga4: "",
-  metaPixel: "",
-  tiktokPixel: "",
+  ga4: import.meta.env.VITE_GA4_MEASUREMENT_ID ?? "",
+  metaPixel: import.meta.env.VITE_META_PIXEL_ID ?? "",
+  tiktokPixel: import.meta.env.VITE_TIKTOK_PIXEL_ID ?? "",
 };
 
 export const TIERS = {
