@@ -7,7 +7,7 @@ import { Loader2, Shield, Check, ArrowLeft } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { fetchMartialOffer, type MartialOfferId } from "@/lib/martialOffers";
+import { fetchMartialOffer } from "@/lib/martialOffers";
 import { getAttribution } from "@/lib/attribution";
 import { track } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -21,26 +21,28 @@ export default function Checkout() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const { user } = useAuth();
-  const requestedTier = sp.get("tier") as MartialOfferId | null;
-  const validIds = ["basic", "elite", "vip"] as const;
-  const tierId = requestedTier && validIds.includes(requestedTier) ? requestedTier : null;
+  const requestedSku = sp.get("sku") ?? sp.get("tier") ?? "";
   const [tier, setTier] = useState<Awaited<ReturnType<typeof fetchMartialOffer>>>(null);
-  const [loadingOffer, setLoadingOffer] = useState(Boolean(tierId));
+  const [loadingOffer, setLoadingOffer] = useState(Boolean(requestedSku));
   const [busy, setBusy] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState("");
-  const referral = sp.get("ref") ?? localStorage.getItem("mx_ref") ?? undefined;
+  const [referral, setReferral] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!tierId) {
+    setReferral(sp.get("ref") ?? localStorage.getItem("mx_ref") ?? undefined);
+  }, [sp]);
+
+  useEffect(() => {
+    if (!requestedSku) {
       setLoadingOffer(false);
       return;
     }
-    fetchMartialOffer(tierId).then(setTier).catch(() => setTier(null)).finally(() => setLoadingOffer(false));
-  }, [tierId]);
+    fetchMartialOffer(requestedSku).then(setTier).catch(() => setTier(null)).finally(() => setLoadingOffer(false));
+  }, [requestedSku]);
 
-  if (!tierId || (!loadingOffer && !tier)) {
+  if (!requestedSku || (!loadingOffer && !tier)) {
     return (
       <div className="min-h-screen bg-background text-foreground bg-gradient-hero flex items-center justify-center p-6">
         <SEO title="Checkout — Offer Not Found" path="/checkout" noindex />
@@ -69,14 +71,7 @@ export default function Checkout() {
 
     setBusy(true);
     const attribution = getAttribution();
-    track("checkout_start", {
-      tier: tier.id,
-      sku: tier.sku,
-      value: tier.price,
-      amount: tier.price,
-      currency: "NGN",
-      ...attribution,
-    });
+    track("checkout_start", { sku: tier.sku, value: tier.price, amount: tier.price, currency: "NGN", ...attribution });
 
     const { data, error } = await supabase.functions.invoke("paystack-init", {
       body: {
@@ -92,12 +87,12 @@ export default function Checkout() {
         utm_term: attribution.utm_term,
         utm_content: attribution.utm_content,
         funnel_origin: attribution.funnel_origin ?? "martial_x",
-        campaign: "tiktok",
+        campaign: attribution.utm_campaign ?? attribution.utm_source ?? "martial_x",
       },
     });
     setBusy(false);
     if (error || !data?.authorization_url) {
-      track("payment_failed", { tier: tier.id, sku: tier.sku, reason: error?.message ?? "no_url" });
+      track("payment_failed", { sku: tier.sku, reason: error?.message ?? "no_url" });
       return toast.error(error?.message ?? "Could not start checkout");
     }
     window.location.href = data.authorization_url;
@@ -114,7 +109,7 @@ export default function Checkout() {
             <div><div className="text-xs uppercase tracking-widest text-muted-foreground">Secure checkout</div><h1 className="font-display text-2xl font-bold">{tier.name}</h1></div>
           </div>
           <div className="text-5xl font-tactical text-gradient-gold mb-6">₦{tier.price.toLocaleString()}</div>
-          <ul className="space-y-2 text-sm mb-8">{["Lifetime access", "Digital certificate", "Priority job placement queue", "Instant Telegram invite"].map((f) => <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-gold mt-0.5" />{f}</li>)}</ul>
+          <ul className="space-y-2 text-sm mb-8">{tier.features.map((f) => <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-gold mt-0.5" />{f}</li>)}</ul>
           <form onSubmit={start} className="space-y-4">
             <div><Label htmlFor="ck-name">Full name</Label><Input id="ck-name" required value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" className="mt-1.5" /></div>
             <div><Label htmlFor="ck-email">Email for receipt</Label><Input id="ck-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" className="mt-1.5" /></div>
@@ -122,7 +117,7 @@ export default function Checkout() {
             {referral && <p className="text-xs text-gold">Referral applied: {referral}</p>}
             <Button type="submit" variant="hero" size="xl" className="w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : `Pay ₦${tier.price.toLocaleString()} via Paystack`}</Button>
             <p className="text-[11px] text-muted-foreground text-center">Secured by Paystack · Cards, Transfer, USSD supported. By paying you accept the <Link to="/legal/academy-terms" className="text-gold underline underline-offset-2">Academy Terms</Link> and <Link to="/legal/refund-policy" className="text-gold underline underline-offset-2">Refund Policy</Link>.</p>
-            {!user && <p className="text-xs text-center text-muted-foreground">Have an account? <Link className="text-gold underline" to={`/login?next=${encodeURIComponent(`/checkout?tier=${tier.id}`)}`}>Sign in</Link> for faster checkout.</p>}
+            {!user && <p className="text-xs text-center text-muted-foreground">Have an account? <Link className="text-gold underline" to={`/login?next=${encodeURIComponent(`/checkout?sku=${tier.sku}`)}`}>Sign in</Link> for faster checkout.</p>}
           </form>
         </div>
       </div>
