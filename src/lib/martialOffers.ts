@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const MARTIAL_X_SKUS = [
+  "MX-BASIC-WARRIOR",
+  "MX-ELITE-SECURITY",
+  "MX-VIP-FAST",
+] as const;
+
 export type MartialOffer = {
   id: string;
   sku: string;
@@ -12,7 +18,10 @@ export type MartialOffer = {
   price: number;
 };
 
-function buildOffer(row: { sku: string; title: string; variant_price: number; tags?: string[] | null }, index: number): MartialOffer | null {
+function buildOffer(
+  row: { sku: string; title: string; variant_price: number; tags?: string[] | null },
+  index: number,
+): MartialOffer | null {
   const price = Number(row.variant_price);
   if (!row.sku || !row.title || !Number.isFinite(price) || price <= 0) return null;
 
@@ -21,7 +30,15 @@ function buildOffer(row: { sku: string; title: string; variant_price: number; ta
   const variants = ["glass", "hero", "gold"] as const;
   const variant = variants[index % variants.length];
   const features = tags
-    .filter((tag) => tag !== "martial-x" && tag !== "security" && tag !== "training" && tag !== "digital" && tag !== "featured" && tag !== "most-popular")
+    .filter(
+      (tag) =>
+        tag !== "martial-x" &&
+        tag !== "security" &&
+        tag !== "training" &&
+        tag !== "digital" &&
+        tag !== "featured" &&
+        tag !== "most-popular",
+    )
     .slice(0, 5)
     .map((tag) => tag.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()));
 
@@ -42,29 +59,31 @@ export async function fetchMartialOffers(): Promise<MartialOffer[]> {
   const { data, error } = await supabase
     .from("products")
     .select("sku,title,variant_price,tags")
-    .eq("published", true)
-    .contains("tags", ["martial-x"])
-    .order("created_at", { ascending: true });
+    .in("sku", MARTIAL_X_SKUS)
+    .eq("published", true);
 
   if (error) throw error;
 
-  return (data ?? [])
-    .map((row, index) => buildOffer(row, index))
+  const bySku = new Map((data ?? []).map((row) => [row.sku, row]));
+  return MARTIAL_X_SKUS
+    .map((sku, index) => {
+      const row = bySku.get(sku);
+      return row ? buildOffer(row, index) : null;
+    })
     .filter((offer): offer is MartialOffer => Boolean(offer));
 }
 
 export async function fetchMartialOffer(sku: string): Promise<MartialOffer | null> {
   const normalizedSku = String(sku || "").trim();
-  if (!normalizedSku) return null;
+  if (!normalizedSku || !MARTIAL_X_SKUS.includes(normalizedSku as (typeof MARTIAL_X_SKUS)[number])) return null;
 
   const { data, error } = await supabase
     .from("products")
     .select("sku,title,variant_price,tags")
     .eq("sku", normalizedSku)
     .eq("published", true)
-    .contains("tags", ["martial-x"])
     .maybeSingle();
 
   if (error) throw error;
-  return data ? buildOffer(data, 0) : null;
+  return data ? buildOffer(data, MARTIAL_X_SKUS.indexOf(normalizedSku as (typeof MARTIAL_X_SKUS)[number])) : null;
 }
