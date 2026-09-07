@@ -16,6 +16,13 @@ const emailSchema = z.string().trim().email().max(255);
 const passwordSchema = z.string().min(8, "Min 8 characters").max(72);
 const nameSchema = z.string().trim().min(2).max(80);
 
+const getAuthRedirect = (path = "/dashboard") => {
+  if (typeof window === "undefined") return `https://martial.resofit.fit${path}`;
+  const host = window.location.hostname;
+  const isLocal = host === "localhost" || host === "127.0.0.1";
+  return isLocal ? `${window.location.origin}${path}` : `https://martial.resofit.fit${path}`;
+};
+
 export default function Auth() {
   const [sp] = useSearchParams();
   const next = sp.get("next") ?? "/dashboard";
@@ -25,6 +32,7 @@ export default function Auth() {
   const { session } = useAuth();
   const [tab, setTab] = useState<"login" | "register">(initial);
   const [busy, setBusy] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   useEffect(() => {
     if (session) nav(next, { replace: true });
@@ -42,7 +50,19 @@ export default function Auth() {
       email: email.data, password: password.data,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (/email not confirmed/i.test(error.message)) {
+        const { error: resendError } = await supabase.auth.resend({
+          type: "signup",
+          email: email.data,
+          options: { emailRedirectTo: getAuthRedirect("/dashboard") },
+        });
+        if (resendError) return toast.error(resendError.message);
+        setVerificationSent(true);
+        return toast.info("Your email is not confirmed. A fresh confirmation email has been sent.");
+      }
+      return toast.error(error.message);
+    }
     track("login");
     toast.success("Welcome back");
     nav(next, { replace: true });
@@ -58,11 +78,11 @@ export default function Auth() {
     if (!email.success || !password.success || !full_name.success)
       return toast.error("Check name, email and password");
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.data,
       password: password.data,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: getAuthRedirect("/dashboard"),
         data: { full_name: full_name.data, referred_by: referred },
       },
     });
@@ -70,8 +90,30 @@ export default function Auth() {
     if (error) return toast.error(error.message);
     track("signup");
     if (referred) track("referral_signup", { code: referred });
+
+    if (!data.session) {
+      setVerificationSent(true);
+      toast.success("Account created. Check your email to confirm your account.");
+      return;
+    }
+
     toast.success("Account created — you're in.");
     nav(next, { replace: true });
+  };
+
+  const resendConfirmation = async () => {
+    const email = emailSchema.safeParse((document.querySelector('input[name="email"]') as HTMLInputElement | null)?.value);
+    if (!email.success) return toast.error("Enter your email first");
+    setBusy(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.data,
+      options: { emailRedirectTo: getAuthRedirect("/dashboard") },
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setVerificationSent(true);
+    toast.success("A fresh confirmation email has been sent.");
   };
 
   return (
@@ -104,6 +146,11 @@ export default function Auth() {
               <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
                 {busy ? <Loader2 className="animate-spin" /> : "Sign In"}
               </Button>
+              {verificationSent && (
+                <Button type="button" variant="outline" className="w-full" onClick={resendConfirmation} disabled={busy}>
+                  {busy ? <Loader2 className="animate-spin" /> : "Resend confirmation email"}
+                </Button>
+              )}
             </form>
           </TabsContent>
           <TabsContent value="register">
@@ -126,6 +173,9 @@ export default function Auth() {
               <Button type="submit" variant="gold" size="lg" className="w-full" disabled={busy}>
                 {busy ? <Loader2 className="animate-spin" /> : "Create Account"}
               </Button>
+              {verificationSent && (
+                <p className="text-xs text-center text-muted-foreground">Confirmation email sent. Open the newest email to finish creating your account.</p>
+              )}
               <p className="text-[11px] text-muted-foreground text-center">
                 By creating an account you agree to the{" "}
                 <Link to="/legal/terms-and-conditions" className="text-gold underline underline-offset-2">Terms &amp; Conditions</Link>,{" "}
