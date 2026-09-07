@@ -16,6 +16,7 @@ import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import StateLgaHubs from "./pages/StateLgaHubs";
 
 const Academy = lazy(() => import("./pages/Academy"));
 const CoursePage = lazy(() => import("./pages/CoursePage"));
@@ -36,86 +37,48 @@ const AdminApplications = lazy(() => import("./pages/admin/Applications"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
 
 const queryClient = new QueryClient();
+const Fallback = () => <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-gold" /></div>;
 
-const Fallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="animate-spin text-gold" />
-  </div>
-);
-
-// Capture ?ref= referral code globally, persist to localStorage.
 const ReferralCapture = () => {
   const [sp] = useSearchParams();
-  useEffect(() => {
-    captureAttribution(window.location.search);
-    const ref = sp.get("ref");
-    if (ref) {
-      localStorage.setItem("mx_ref", ref);
-      track("cta_click", { source: "referral_landing", ref });
-    }
-  }, [sp]);
+  useEffect(() => { captureAttribution(window.location.search); const ref = sp.get("ref"); if (ref) { localStorage.setItem("mx_ref", ref); track("cta_click", { source: "referral_landing", ref }); } }, [sp]);
   return null;
 };
 
-// Fire a TikTok/Meta/GA page view on every SPA route change.
 const RouteTracker = () => {
   const loc = useLocation();
-  useEffect(() => {
-    const page = { page_path: loc.pathname, page_location: window.location.href };
-    window.gtag?.("event", "page_view", page);
-    window.fbq?.("track", "PageView", page);
-    window.ttq?.track("PageView", page);
-  }, [loc.pathname]);
+  useEffect(() => { const page = { page_path: loc.pathname, page_location: window.location.href }; window.gtag?.("event", "page_view", page); window.fbq?.("track", "PageView", page); window.ttq?.track("PageView", page); }, [loc.pathname]);
   return null;
 };
 
 const App = () => {
   useEffect(() => { initAnalytics(); }, []);
-  return (
-    <ErrorBoundary>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AuthProvider>
-                <ReferralCapture />
-                <RouteTracker />
-                <Suspense fallback={<Fallback />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/academy" element={<Academy />} />
-                    <Route path="/academy/:slug" element={<CoursePage />} />
-                    <Route path="/academy/:slug/:lessonSlug" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
-                    <Route path="/certificate/:code" element={<CertificatePage />} />
-                    <Route path="/apply" element={<Apply />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/legal" element={<Legal />} />
-                    <Route path="/legal/:slug" element={<Legal />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/payment/success" element={<PaymentSuccess />} />
-                    <Route path="/payment/cancel" element={<PaymentCancel />} />
-                    <Route path="/login" element={<Auth />} />
-                    <Route path="/register" element={<Auth />} />
-                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                    <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
-                    <Route path="/admin" element={<ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute>} />
-                    <Route path="/admin/applications" element={<ProtectedRoute requireRole="admin"><AdminApplications /></ProtectedRoute>} />
-                    <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                <FloatingWhatsApp />
-              </AuthProvider>
-            </BrowserRouter>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
-    </ErrorBoundary>
-  );
+  return <ErrorBoundary><HelmetProvider><QueryClientProvider client={queryClient}><TooltipProvider><Toaster /><Sonner /><BrowserRouter><AuthProvider><ReferralCapture /><RouteTracker /><Suspense fallback={<Fallback />}><Routes>
+    <Route path="/" element={<Index />} />
+    <Route path="/pricing" element={<PricingPage />} />
+    <Route path="/academy" element={<Academy />} />
+    <Route path="/academy/:slug" element={<CoursePage />} />
+    <Route path="/academy/:slug/:lessonSlug" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
+    <Route path="/certificate/:code" element={<CertificatePage />} />
+    <Route path="/apply" element={<Apply />} />
+    <Route path="/contact" element={<Contact />} />
+    <Route path="/legal" element={<Legal />} />
+    <Route path="/legal/:slug" element={<Legal />} />
+    <Route path="/checkout" element={<Checkout />} />
+    <Route path="/payment/success" element={<PaymentSuccess />} />
+    <Route path="/payment/cancel" element={<PaymentCancel />} />
+    <Route path="/login" element={<Auth />} />
+    <Route path="/register" element={<Auth />} />
+    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+    <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
+    <Route path="/admin" element={<ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute>} />
+    <Route path="/admin/applications" element={<ProtectedRoute requireRole="admin"><AdminApplications /></ProtectedRoute>} />
+    <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
+    <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
+    <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
+    <Route path="*" element={<NotFound />} />
+  </Routes></Suspense><FloatingWhatsApp /></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></HelmetProvider></ErrorBoundary>;
 };
 
 export default App;
