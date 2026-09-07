@@ -77,6 +77,7 @@ const App = () => {
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
     <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
+    <Route path="/state/:state/lga/hubs/:lga" element={<StateLgaHubs />} />
     <Route path="*" element={<NotFound />} />
   </Routes></Suspense><FloatingWhatsApp /></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></HelmetProvider></ErrorBoundary>;
 };
