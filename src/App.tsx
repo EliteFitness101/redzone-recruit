@@ -35,6 +35,7 @@ const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminApplications = lazy(() => import("./pages/admin/Applications"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const MartialVerification = lazy(() => import("./pages/MartialVerification"));
 
 const queryClient = new QueryClient();
 const Fallback = () => <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-gold" /></div>;
@@ -78,6 +79,7 @@ const App = () => {
     <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs/:lga" element={<StateLgaHubs />} />
+    <Route path="/verification" element={<MartialVerification />} />
     <Route path="*" element={<NotFound />} />
   </Routes></Suspense><FloatingWhatsApp /></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></HelmetProvider></ErrorBoundary>;
 };
