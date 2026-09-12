@@ -26,6 +26,14 @@ const AGE_RANGES: Record<string, number> = {
   "45+": 46,
 };
 
+const PROGRAM_BY_INTEREST: Record<string, string> = {
+  "Basic Security Training": "Basic Warrior",
+  "Elite Security Track": "Elite Security Track",
+  "VIP Protection": "VIP Fast Track",
+  "Tactical Fitness Coaching": "Tactical Fitness Coaching",
+  "Not sure yet": "Unassigned",
+};
+
 const schema = z.object({
   full_name: z.string().trim().min(2, "Enter your full name").max(80),
   email: z.string().trim().email("Enter a valid email").max(255),
@@ -62,8 +70,9 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     }
     const d = parsed.data;
     const attribution = getAttribution();
+    const program = PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest;
     setBusy(true);
-    const { error } = await supabase.from("applications").insert({
+    const { data: application, error } = await supabase.from("applications").insert({
       full_name: d.full_name,
       email: d.email,
       phone: d.phone,
@@ -72,6 +81,8 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       education: d.profession,
       fitness_level: d.fitness_level,
       prior_experience: d.security_experience,
+      program,
+      source: "martial-x-web",
       notes: JSON.stringify({
         age_range: d.age_range,
         profession: d.profession,
@@ -80,12 +91,41 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
         attribution,
       }),
       user_id: user?.id ?? null,
-    });
+    }).select("id,reference_number").single();
     setBusy(false);
     if (error) return toast.error(error.message);
+
+    // Persist the application as a canonical onboarding event. The event is
+    // idempotent by application ID; delivery remains disabled until the
+    // verified Meta/WhatsApp adapter is configured in production.
+    const { error: eventError } = await supabase.functions.invoke("resofit-event-ingest", {
+      body: {
+        event_name: "application.submitted",
+        contract_version: "1.0",
+        source_system: "redzone-recruit",
+        idempotency_key: `application.submitted:${application.id}`,
+        rsid: null,
+        user_id: user?.id ?? null,
+        payload: {
+          application_id: application.id,
+          application_reference: application.reference_number,
+          full_name: d.full_name,
+          phone: d.phone,
+          email: d.email,
+          programme: program,
+          training_interest: d.training_interest,
+          location: d.location,
+          source: "martial-x-web",
+        },
+        adapters: ["martial-whatsapp"],
+      },
+    });
+    if (eventError) console.error("[application.submitted] event failed", eventError);
+
     track("application_submit", {
       location: d.location,
       training_interest: d.training_interest,
+      program,
       experience: d.security_experience,
       ...attribution,
     });
