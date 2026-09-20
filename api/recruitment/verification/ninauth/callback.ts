@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { backendClient, json, requestId } from "../../../_lib/recruitment";
 
 export default async function handler(req: Request) {
@@ -60,7 +61,8 @@ export default async function handler(req: Request) {
     }
 
     const userInfo = await userInfoResponse.json();
-    const reference = userInfo?.data?.id || userInfo?.id || null;
+    const identityReference = userInfo?.data?.id || userInfo?.id || null;
+    const reference = identityReference ? createHash("sha256").update(String(identityReference)).digest("hex") : null;
 
     const { data: verification, error: verificationError } = await supabase
       .from("candidate_verifications")
