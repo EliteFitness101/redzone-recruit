@@ -32,6 +32,11 @@ const schema = z.object({
   farm_experience: z.string().trim().min(10, "Briefly describe your practical farm/livestock experience").max(1200),
   field_ready: z.literal("yes", { errorMap: () => ({ message: "Confirm that you are willing to work on-site" }) }),
   consent: z.literal("yes", { errorMap: () => ({ message: "Confirm the application declaration" }) }),
+}).superRefine((d, ctx) => {
+  const professional = d.position !== "Farm Assistant / Labourer";
+  if (professional && !d.qualification) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["qualification"], message: "Enter your qualification" });
+  if (professional && !d.institution) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["institution"], message: "Enter your institution" });
+  if (professional && !d.experience_years) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["experience_years"], message: "Enter your relevant experience" });
 });
 
 export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
@@ -84,6 +89,8 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       prior_experience: d.farm_experience,
       program: d.position,
       source: "cy-nwankwo-farm-recruitment",
+      campaign: "CY-NWANKWO-FARM-OPERATIONS",
+      attribution: attribution as never,
       notes,
       user_id: user?.id ?? null,
     }).select("id,reference_number").single();
