@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
+import { submitRecruitmentApplication } from "@/lib/recruitmentApi";
 import { Link } from "react-router-dom";
 import { waLink, tgLink } from "@/config/site";
 
@@ -72,26 +73,32 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     const attribution = getAttribution();
     const program = PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest;
     setBusy(true);
-    const { data: application, error } = await supabase.from("applications").insert({
-      full_name: d.full_name,
-      email: d.email,
-      phone: d.phone,
-      location: d.location,
-      age: AGE_RANGES[d.age_range] ?? 21,
-      education: d.profession,
-      fitness_level: d.fitness_level,
-      prior_experience: d.security_experience,
-      program,
-      source: "martial-x-web",
-      notes: JSON.stringify({
-        age_range: d.age_range,
-        profession: d.profession,
-        security_experience: d.security_experience,
-        training_interest: d.training_interest,
-        attribution,
-      }),
-      user_id: user?.id ?? null,
-    }).select("id,reference_number").single();
+    let application: { id: string; reference_number: string | null };
+    try {
+      const result = await submitRecruitmentApplication({
+        full_name: d.full_name,
+        email: d.email,
+        phone: d.phone,
+        location: d.location,
+        age: d.age,
+        education: d.education,
+        fitness_level: d.fitness_level,
+        prior_experience: d.prior_experience,
+        program,
+        source: "redzone-security-recruitment",
+        campaign: d.campaign || undefined,
+        attribution: attribution as never,
+        notes: d.notes,
+        user_id: user?.id ?? null,
+      });
+      application = result.application;
+    } catch (error) {
+      setBusy(false);
+      toast.error(error instanceof Error ? error.message : "We could not submit your application. Please try again.");
+      console.error("[security-application]", error);
+      return;
+    }
+
     setBusy(false);
     if (error) return toast.error(error.message);
 
