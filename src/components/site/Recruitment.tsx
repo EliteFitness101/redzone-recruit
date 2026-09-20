@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
-import { submitRecruitmentApplication } from "@/lib/recruitmentApi";
+import { submitRecruitmentApplication, startNINAuthVerification } from "@/lib/recruitmentApi";
 import { Link } from "react-router-dom";
 import { waLink, tgLink } from "@/config/site";
 
@@ -132,6 +132,14 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       experience: d.security_experience,
       ...attribution,
     });
+    try {
+      const verification = await startNINAuthVerification(reference);
+      window.location.assign(verification.authorization_url);
+      return;
+    } catch {
+      // External NINAuth credentials may not yet be provisioned; application remains valid.
+    }
+
     toast.success("Application received", {
       description: "Admissions will reach you on WhatsApp within 24 hours.",
     });
