@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
+import { submitRecruitmentApplication } from "@/lib/recruitmentApi";
 import { Link } from "react-router-dom";
 
 const POSITIONS = [
@@ -78,22 +79,29 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       "ATTRIBUTION: " + JSON.stringify(attribution),
     ].join("\n");
 
-    const { data: application, error } = await supabase.from("applications").insert({
-      full_name: d.full_name,
-      email: d.email,
-      phone: d.phone,
-      location: d.location,
-      age: null,
-      education: d.qualification,
-      fitness_level: null,
-      prior_experience: d.farm_experience,
-      program: d.position,
-      source: "cy-nwankwo-farm-recruitment",
-      campaign: "CY-NWANKWO-FARM-OPERATIONS",
-      attribution: attribution as never,
-      notes,
-      user_id: user?.id ?? null,
-    }).select("id,reference_number").single();
+    let application: { id: string; reference_number: string | null };
+    try {
+      const result = await submitRecruitmentApplication({
+        full_name: d.full_name,
+        email: d.email,
+        phone: d.phone,
+        location: d.location,
+        education: d.qualification,
+        prior_experience: d.farm_experience,
+        program: d.position,
+        source: "cy-nwankwo-farm-recruitment",
+        campaign: "CY-NWANKWO-FARM-OPERATIONS",
+        attribution: attribution as never,
+        notes,
+        user_id: user?.id ?? null,
+      });
+      application = result.application;
+    } catch (error) {
+      setBusy(false);
+      toast.error(error instanceof Error ? error.message : "We could not submit your application. Please try again.");
+      console.error("[farm-application]", error);
+      return;
+    }
 
     setBusy(false);
     if (error) {
