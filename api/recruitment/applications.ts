@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { backendClient, json, clientHash, requestId } from "../_lib/recruitment";
+import { backendClient, json, requestId } from "../_lib/recruitment";
 
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
@@ -56,7 +56,6 @@ export default async function handler(req: Request) {
 
     return json({ application: data, request_id: rid }, 201, {
       "x-recruitment-request-id": rid,
-      "x-client-hash": clientHash(req),
     });
   } catch (error) {
     console.error("[recruitment-api]", rid, error);
