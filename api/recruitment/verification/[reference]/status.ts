@@ -1,9 +1,11 @@
 import { backendClient, json, requestId } from "../../../_lib/recruitment";
 
-export default async function handler(req: Request, context: { params?: { reference?: string } }) {
+export default async function handler(req: Request) {
   const rid = requestId();
   if (req.method !== "GET") return json({ error: "Method not allowed", request_id: rid }, 405);
-  const reference = context.params?.reference ? decodeURIComponent(context.params.reference) : "";
+  const path = new URL(req.url).pathname.replace(/\/$/, "");
+  const marker = "/api/recruitment/verification/";
+  const reference = path.startsWith(marker) ? decodeURIComponent(path.slice(marker.length).replace(/\/status$/, "")) : "";
   if (!reference) return json({ error: "Missing application reference", request_id: rid }, 400);
 
   try {
