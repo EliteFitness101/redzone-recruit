@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
 import { submitRecruitmentApplication } from "@/lib/recruitmentApi";
@@ -43,7 +42,6 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const Heading = asH1 ? "h1" : "h2";
   const [busy, setBusy] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState("");
-  const { user } = useAuth();
   const started = useRef(false);
 
   const onFirstInput = () => {
@@ -92,7 +90,6 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
         campaign: "CY-NWANKWO-FARM-OPERATIONS",
         attribution: attribution as never,
         notes,
-        user_id: user?.id ?? null,
       });
       application = result.application;
     } catch (error) {
