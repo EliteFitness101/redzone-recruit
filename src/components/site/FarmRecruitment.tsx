@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CheckCircle2, FileText, Loader2, MessageCircle, Send, Sprout, Stethoscope, Tractor, Users } from "lucide-react";
+import { CheckCircle2, FileText, Loader2 , MessageCircle, Send, Sprout, Stethoscope, Tractor, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -154,13 +154,13 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button variant="gold" size="lg" asChild>
-                <a href={"https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent("Hello, I have a question about the CY Nwankwo Farm Operations recruitment.")} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp_click", { source: "farm-recruitment" })}>
-                  <MessageCircle /> WhatsApp Recruitment
+                <a href="mailto:recruit@resofit.fit" onClick={() => track("email_click", { source: "farm-recruitment_primary" })}>
+                  <Send /> Email Recruitment
                 </a>
               </Button>
               <Button variant="tactical" size="lg" asChild>
-                <a href="mailto:recruit@resofit.fit" onClick={() => track("email_click", { source: "farm-recruitment" })}>
-                  <Send /> recruit@resofit.fit
+                <a href="mailto:recruit@resofit.fit" onClick={() => track("email_click", { source: "farm-recruitment_secondary" })}>
+                  recruit@resofit.fit
                 </a>
               </Button>
             </div>
