@@ -22,14 +22,14 @@ const POSITIONS = [
 
 const schema = z.object({
   full_name: z.string().trim().min(2, "Enter your full name").max(100),
-  email: z.string().trim().email("Enter a valid email").max(255),
+  email: z.string().trim().email("Enter a valid email").max(255).or(z.literal("")),
   phone: z.string().trim().min(7, "Enter a valid phone/WhatsApp number").max(30),
   location: z.string().trim().min(2, "Enter your current location").max(100),
   position: z.string().min(2, "Select a position"),
-  qualification: z.string().trim().min(2, "Enter your qualification").max(160),
-  institution: z.string().trim().min(2, "Enter your institution").max(160),
+  qualification: z.string().trim().max(160),
+  institution: z.string().trim().max(160),
   graduation_year: z.string().trim().max(4),
-  experience_years: z.string().trim().min(1, "Enter your relevant experience").max(30),
+  experience_years: z.string().trim().max(30),
   farm_experience: z.string().trim().min(10, "Briefly describe your practical farm/livestock experience").max(1200),
   field_ready: z.literal("yes", { errorMap: () => ({ message: "Confirm that you are willing to work on-site" }) }),
   consent: z.literal("yes", { errorMap: () => ({ message: "Confirm the application declaration" }) }),
@@ -37,7 +37,7 @@ const schema = z.object({
 
 export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const Heading = asH1 ? "h1" : "h2";
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [selectedPosition, setSelectedPosition] = useState("");
   const { user } = useAuth();
   const started = useRef(false);
 
@@ -168,7 +168,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
             <div className="mt-8 glass rounded-2xl p-5">
               <p className="text-sm font-semibold">Application checklist</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Have your CV ready. Graduate applicants should provide qualification and professional registration details where applicable. Credentials and references may be verified.
+                Have your CV ready for follow-up. Graduate applicants should provide qualification and professional registration details where applicable. Credentials and references may be verified.
               </p>
             </div>
           </div>
@@ -193,7 +193,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" required maxLength={255} placeholder="you@email.com" autoComplete="email" className="mt-1.5" />
+                  <Input id="email" name="email" type="email" maxLength={255} placeholder="you@email.com" autoComplete="email" className="mt-1.5" />
                 </div>
                 <div>
                   <Label htmlFor="phone">Phone / WhatsApp</Label>
@@ -208,7 +208,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
 
               <div>
                 <Label htmlFor="position">Position Applied For</Label>
-                <select id="position" name="position" required defaultValue="" className={selectCls}>
+                <select id="position" name="position" required value={selectedPosition} onChange={(e) => setSelectedPosition(e.target.value)} className={selectCls}>
                   <option value="">Select a position…</option>
                   {POSITIONS.map(({ id, label }) => <option key={id} value={label}>{label}</option>)}
                 </select>
