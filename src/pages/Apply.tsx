@@ -1,17 +1,21 @@
 import { useEffect } from "react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
-import { Recruitment } from "@/components/site/Recruitment";
+import { FarmRecruitment } from "@/components/site/FarmRecruitment";
 import { SEO } from "@/components/SEO";
 
 export default function Apply() {
   useEffect(() => window.scrollTo(0, 0), []);
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SEO title="Apply for Security Deployment" path="/apply" description="Submit your recruitment application to RedZone Security. Get vetted, trained and deployed to licensed firms in Nigeria." />
+      <SEO
+        title="Farm Recruitment — CY Nwankwo Farm Operations"
+        path="/apply"
+        description="Immediate recruitment for a 7-person farm management and operations team covering cattle, goats and palm plantation operations in Ahiaba Ubi, Isiala Ngwa North, Abia State."
+      />
       <Navbar />
       <main className="pt-24">
-        <Recruitment asH1 />
+        <FarmRecruitment asH1 />
       </main>
       <Footer />
     </div>
