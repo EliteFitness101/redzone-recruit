@@ -16,7 +16,6 @@ const schema = z.object({
   campaign: z.string().trim().max(150).optional(),
   attribution: z.record(z.string(), z.unknown()).optional(),
   notes: z.string().trim().max(5000).optional(),
-  user_id: z.string().uuid().nullable().optional(),
 });
 
 export default async function handler(req: Request) {
@@ -45,7 +44,7 @@ export default async function handler(req: Request) {
         campaign: d.campaign || null,
         attribution: d.attribution || {},
         notes: d.notes || null,
-        user_id: d.user_id ?? null,
+        user_id: null,
       })
       .select("id,reference_number")
       .single();
