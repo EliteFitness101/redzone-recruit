@@ -13,7 +13,6 @@ export interface RecruitmentApplicationPayload {
   campaign?: string;
   attribution?: Record<string, unknown>;
   notes?: string;
-  user_id?: string | null;
 }
 
 export async function submitRecruitmentApplication(payload: RecruitmentApplicationPayload) {
