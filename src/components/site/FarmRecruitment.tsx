@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CheckCircle2, FileText, Loader2 , MessageCircle, Send, Sprout, Stethoscope, Tractor, Users } from "lucide-react";
+import { CheckCircle2, FileText, Loader2, Send, Sprout, Stethoscope, Tractor, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,6 @@ import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
 import { Link } from "react-router-dom";
-
-const WHATSAPP = "2348132255842";
 
 const POSITIONS = [
   { id: "veterinary", label: "Graduate Veterinary Officer", icon: Stethoscope },
@@ -27,7 +25,8 @@ const schema = z.object({
   location: z.string().trim().min(2, "Enter your current location").max(100),
   position: z.string().min(2, "Select a position"),
   qualification: z.string().trim().max(160),
-  institution: z.string().trim().max(160),\n  registration: z.string().trim().max(160),
+  institution: z.string().trim().max(160),
+  registration: z.string().trim().max(160),
   graduation_year: z.string().trim().max(4),
   experience_years: z.string().trim().max(30),
   farm_experience: z.string().trim().min(10, "Briefly describe your practical farm/livestock experience").max(1200),
@@ -37,7 +36,8 @@ const schema = z.object({
 
 export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const Heading = asH1 ? "h1" : "h2";
-  const [busy, setBusy] = useState(false);\n  const [selectedPosition, setSelectedPosition] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState("");
   const { user } = useAuth();
   const started = useRef(false);
 
@@ -65,7 +65,8 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       "RECRUITMENT: CY NWANKWO FARM OPERATIONS",
       "POSITION: " + d.position,
       "INSTITUTION: " + d.institution,
-      "GRADUATION YEAR: " + (d.graduation_year || "Not provided"),\n      "PROFESSIONAL REGISTRATION: " + (d.registration || "Not provided"),
+      "GRADUATION YEAR: " + (d.graduation_year || "Not provided"),
+      "PROFESSIONAL REGISTRATION: " + (d.registration || "Not provided"),
       "EXPERIENCE: " + d.experience_years,
       "PRACTICAL FARM EXPERIENCE: " + d.farm_experience,
       "ON-SITE: Yes",
@@ -107,10 +108,6 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     });
     form.reset();
 
-    const msg = "Hello CY Nwankwo Farm Operations Recruitment Team, I just submitted an application for " + d.position + ". Application reference: " + reference + ". Name: " + d.full_name + ".";
-    window.setTimeout(() => {
-      window.open("https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg), "_blank", "noopener,noreferrer");
-    }, 500);
   };
 
   const selectCls = "mt-1.5 flex h-11 w-full rounded-md border border-input bg-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
