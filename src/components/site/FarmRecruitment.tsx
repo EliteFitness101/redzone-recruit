@@ -213,12 +213,12 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="qualification">Highest Qualification</Label>
-                  <Input id="qualification" name="qualification" required maxLength={160} placeholder="B.Sc / B.Agric / DVM / HND..." />
+                  <Label htmlFor="qualification">Highest Qualification {selectedPosition !== "Farm Assistant / Labourer" && <span className="text-gold">*</span>}</Label>
+                  <Input id="qualification" name="qualification" required={selectedPosition !== "Farm Assistant / Labourer"} maxLength={160} placeholder="B.Sc / B.Agric / DVM / HND..." />
                 </div>
                 <div>
-                  <Label htmlFor="institution">Institution</Label>
-                  <Input id="institution" name="institution" required maxLength={160} placeholder="University / Polytechnic..." />
+                  <Label htmlFor="institution">Institution {selectedPosition !== "Farm Assistant / Labourer" && <span className="text-gold">*</span>}</Label>
+                  <Input id="institution" name="institution" required={selectedPosition !== "Farm Assistant / Labourer"} maxLength={160} placeholder="University / Polytechnic..." />
                 </div>
               </div>
 
@@ -228,10 +228,17 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
                   <Input id="graduation_year" name="graduation_year" inputMode="numeric" maxLength={4} placeholder="2024" />
                 </div>
                 <div>
-                  <Label htmlFor="experience_years">Relevant Experience</Label>
-                  <Input id="experience_years" name="experience_years" required maxLength={30} placeholder="Fresh graduate / 2 years..." />
+                  <Label htmlFor="experience_years">Relevant Experience {selectedPosition !== "Farm Assistant / Labourer" && <span className="text-gold">*</span>}</Label>
+                  <Input id="experience_years" name="experience_years" required={selectedPosition !== "Farm Assistant / Labourer"} maxLength={30} placeholder="Fresh graduate / 2 years..." />
                 </div>
               </div>
+
+              {selectedPosition !== "Farm Assistant / Labourer" && (
+                <div>
+                  <Label htmlFor="registration">Professional Registration / Licence <span className="text-muted-foreground">(if applicable)</span></Label>
+                  <Input id="registration" name="registration" maxLength={160} placeholder="Professional body / registration number" />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="farm_experience">Practical Farm / Livestock Experience</Label>
