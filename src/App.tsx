@@ -23,7 +23,9 @@ const CoursePage = lazy(() => import("./pages/CoursePage"));
 const LessonPage = lazy(() => import("./pages/LessonPage"));
 const CertificatePage = lazy(() => import("./pages/CertificatePage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
-const Apply = lazy(() => import("./pages/Apply"));\nconst FarmRecruit = lazy(() => import("./pages/FarmRecruit"));\nconst GeneralRecruits = lazy(() => import("./pages/GeneralRecruits"));
+const Apply = lazy(() => import("./pages/Apply"));
+const FarmRecruit = lazy(() => import("./pages/FarmRecruit"));
+const GeneralRecruits = lazy(() => import("./pages/GeneralRecruits"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Referrals = lazy(() => import("./pages/Referrals"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -61,7 +63,9 @@ const App = () => {
     <Route path="/academy/:slug" element={<CoursePage />} />
     <Route path="/academy/:slug/:lessonSlug" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
     <Route path="/certificate/:code" element={<CertificatePage />} />
-    <Route path="/apply" element={<Apply />} />\n    <Route path="/recruit" element={<FarmRecruit />} />\n    <Route path="/general-recruits" element={<GeneralRecruits />} />
+    <Route path="/apply" element={<Apply />} />
+    <Route path="/recruit" element={<FarmRecruit />} />
+    <Route path="/general-recruits" element={<GeneralRecruits />} />
     <Route path="/contact" element={<Contact />} />
     <Route path="/legal" element={<Legal />} />
     <Route path="/legal/:slug" element={<Legal />} />
