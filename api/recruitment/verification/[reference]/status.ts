@@ -20,7 +20,7 @@ export default async function handler(req: Request) {
 
     const { data, error } = await supabase
       .from("candidate_verifications")
-      .select("verification_type,provider,status,match_result,performed_at,expires_at,failure_reason,created_at")
+      .select("verification_type,provider,status,match_result,performed_at,expires_at,created_at")
       .eq("application_id", application.id)
       .order("created_at", { ascending: false });
 
