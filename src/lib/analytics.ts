@@ -54,13 +54,13 @@ export function track(event: EventName, params: Params = {}) {
     // TikTok Pixel
     const ttEvent =
       event === "payment_success"
-        ? "CompletePayment"
+        ? "Purchase"
         : event === "checkout_start"
         ? "InitiateCheckout"
         : event === "signup"
         ? "CompleteRegistration"
         : event === "application_submit"
-        ? "SubmitForm"
+        ? "Lead"
         : event === "view_content"
         ? "ViewContent"
         : "ClickButton";
