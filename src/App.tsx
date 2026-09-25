@@ -39,6 +39,10 @@ const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const CYRecruitmentMatrix = lazy(() => import("./pages/admin/CYRecruitmentMatrix"));
 const FarmCommandCenter = lazy(() => import("./pages/admin/FarmCommandCenter"));
 const FarmModule = lazy(() => import("./pages/admin/FarmModule"));
+const FarmSupervisor = lazy(() => import("./pages/admin/FarmSupervisor"));
+const FarmReports = lazy(() => import("./pages/admin/FarmReports"));
+const FarmCandidates = lazy(() => import("./pages/admin/FarmCandidates"));
+const FarmAccessRoute = lazy(() => import("./pages/admin/FarmAccessRoute").then(m => ({ default: m.FarmAccessRoute })));
 const MartialVerification = lazy(() => import("./pages/MartialVerification"));
 
 const queryClient = new QueryClient();
@@ -82,17 +86,17 @@ const App = () => {
     <Route path="/admin/applications" element={<ProtectedRoute requireRole="admin"><AdminApplications /></ProtectedRoute>} />
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
     <Route path="/admin/cy-recruitment" element={<ProtectedRoute requireRole="admin"><CYRecruitmentMatrix /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center" element={<ProtectedRoute requireRole="admin"><FarmCommandCenter /></ProtectedRoute>} />
-        <Route path="/admin/farm-command-center/supervisor" element={<ProtectedRoute requireRole="admin"><FarmSupervisor /></ProtectedRoute>} />
-        <Route path="/admin/farm-command-center/reports" element={<ProtectedRoute requireRole="admin"><FarmReports /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/workforce" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/gaps" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/productivity" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/recruitment" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/placements" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/performance" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/reports" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
-    <Route path="/admin/farm-command-center/actions" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center" element={<FarmAccessRoute><FarmCommandCenter /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/supervisor" element={<FarmAccessRoute roles={["supervisor"]}><FarmSupervisor /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/reports" element={<FarmAccessRoute roles={["executive","operations"]}><FarmReports /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/workforce" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/gaps" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/productivity" element={<FarmAccessRoute roles={["operations","executive","supervisor","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/recruitment" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/candidates" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmCandidates /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/placements" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/performance" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/actions" element={<FarmAccessRoute roles={["operations","executive","supervisor"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs/:lga" element={<StateLgaHubs />} />
