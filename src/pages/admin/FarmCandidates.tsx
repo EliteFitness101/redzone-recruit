@@ -16,6 +16,16 @@ const statuses = [
   "Not Currently Recommended—Role Requirements Not Demonstrated"
 ];
 
+function extractPosition(notes: string | null) { return notes?.match(/Applied position: (.*?)\. Evaluation source:/)?.[1] || "Position not recorded"; }
+function getState(notes: string | null, recommendation: string | null) {
+  const n = notes || "";
+  if (n.includes("CORE SHORTLIST")) return "Core shortlist";
+  if (n.includes("RESERVE SHORTLIST")) return "Reserve shortlist";
+  if (n.includes("PHASE 2 RELOCATION POOL")) return "Phase 2 standby";
+  if (n.includes("ON HOLD")) return "On hold";
+  return recommendation || "Waiting";
+}
+
 export default function FarmCandidates() {
   const { user } = useAuth();
   const [rows,setRows]=useState<any[]>([]); const [requisitions,setReqs]=useState<any[]>([]);
@@ -56,7 +66,7 @@ export default function FarmCandidates() {
         <div><Label>Recommendation</Label><select value={form.recommendation_status} onChange={e=>set("recommendation_status",e.target.value)} className="mt-1.5 h-10 w-full rounded-md border border-white/10 bg-black px-3 text-sm">{statuses.map(s=><option key={s}>{s}</option>)}</select></div>
         <div className="sm:col-span-2 lg:col-span-3 flex justify-end"><Button variant="gold" disabled={saving}><Save className="mr-2 h-4 w-4"/>{saving?"Saving…":"Save candidate"}</Button></div>
       </form>}
-      <div className="mt-6 grid gap-3">{loading?<div className="p-12 text-center text-white/35">Loading live candidates…</div>:rows.length===0?<div className="rounded-2xl border border-white/10 p-14 text-center"><CheckCircle2 className="mx-auto h-8 w-8 text-amber-300/50"/><p className="mt-3 text-white/60">No candidates recorded yet.</p><p className="mt-1 text-xs text-white/30">Empty production data is preserved as empty.</p></div>:rows.map(r=><div key={r.id} className="rounded-2xl border border-white/10 bg-white/[.025] p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">{r.full_name||"Name not recorded"}</h2><p className="mt-1 text-xs text-white/40">{r.farm_requisitions?.position||"Position not recorded"} · {r.location||"Location not recorded"}</p></div><span className="rounded-full border border-amber-300/20 px-3 py-1 text-[10px] uppercase tracking-wider text-amber-200">{r.recommendation_status||"Pending"}</span></div><div className="mt-4 grid gap-3 text-xs text-white/55 sm:grid-cols-3"><div>Screening: {r.screening_status||"Not recorded"}</div><div>Verification: {r.verification_status||"Not recorded"}</div><div>Interview: {r.interview_status||"Not recorded"}</div></div></div>)}</div>
+      <div className="mt-6 grid gap-3">{loading?<div className="p-12 text-center text-white/35">Loading live candidates…</div>:rows.length===0?<div className="rounded-2xl border border-white/10 p-14 text-center"><CheckCircle2 className="mx-auto h-8 w-8 text-amber-300/50"/><p className="mt-3 text-white/60">No candidates recorded yet.</p><p className="mt-1 text-xs text-white/30">Empty production data is preserved as empty.</p></div>:rows.map(r=><div key={r.id} className="rounded-2xl border border-white/10 bg-white/[.025] p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">{r.full_name||"Name not recorded"}</h2><p className="mt-1 text-xs text-white/40">{extractPosition(r.notes)} · {r.location||"Location not recorded"}</p></div><span className="rounded-full border border-amber-300/20 px-3 py-1 text-[10px] uppercase tracking-wider text-amber-200">{getState(r.notes,r.recommendation_status)}</span></div><div className="mt-4 grid gap-3 text-xs text-white/55 sm:grid-cols-3"><div>Screening: {r.screening_status||"Not recorded"}</div><div>Verification: {r.verification_status||"Not recorded"}</div><div>Interview: {r.interview_status||"Not recorded"}</div></div></div>)}</div>
     </main>
   </div>;
 }
