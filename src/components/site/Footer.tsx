@@ -68,6 +68,10 @@ export const Footer = () => (
         </div>
       </div>
 
+      <div className="mt-10 pt-5 border-t border-border/40 text-center text-[10px] leading-relaxed text-muted-foreground/60">
+        For licence, regulatory, insurance, recruitment or operational verification, contact <a href="mailto:legal@resofit.fit" className="hover:text-gold transition-colors">legal@resofit.fit</a>.
+      </div>
+
       <div className="mt-12 pt-6 border-t border-border/50 flex flex-col md:flex-row gap-3 items-center justify-between text-xs text-muted-foreground">
         <p>© {new Date().getFullYear()} Martial X × RedZone Security. All rights reserved.</p>
         <p className="uppercase tracking-widest">resofit.fit/martial-x</p>
