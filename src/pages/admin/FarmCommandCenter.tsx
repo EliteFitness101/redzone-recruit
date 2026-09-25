@@ -14,12 +14,16 @@ type Metric = { label: string; value: number | string; detail: string; icon: Rea
 type Gap = { id: string; priority: string; position_id: string | null; gap_quantity: number | null; reason: string | null; status: string };
 type Action = { id: string; title: string; priority: string; status: string; action_type: string; due_at: string | null };
 type Placement = { id: string; position: string; fee_base: number | null; fee_amount: number | null; payment_status: string; placement_date: string | null };
+type Candidate = { id: string; full_name: string; recommendation_status: string; verification_status: string; interview_status: string; notes: string | null; updated_at: string };
 
 const units = [
   { key: "cattle", label: "Cattle", icon: PawPrint },
   { key: "goat", label: "Goat", icon: PawPrint },
   { key: "pig", label: "Pig", icon: PawPrint },
   { key: "palm", label: "Palm", icon: Sprout },
+  { key: "general", label: "General Farm Operations", icon: Factory },
+  { key: "management", label: "Management / Administration", icon: ClipboardList },
+  { key: "maintenance", label: "Maintenance / Support", icon: Activity },
 ];
 
 export default function FarmCommandCenter() {
@@ -31,11 +35,12 @@ export default function FarmCommandCenter() {
   const [actions, setActions] = useState<Action[]>([]);
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [reportToday, setReportToday] = useState(0);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
 
   async function load() {
     setRefreshing(true);
     const today = new Date().toISOString().slice(0, 10);
-    const [workers, gapsQ, reports, reqs, placementsQ, actionsQ, exceptions, todayQ] = await Promise.all([
+    const [workers, gapsQ, reports, reqs, placementsQ, actionsQ, exceptions, todayQ, candidatesQ] = await Promise.all([
       supabase.from("farm_workers").select("id", { count: "exact", head: true }),
       supabase.from("farm_workforce_gaps").select("id,priority,position_id,gap_quantity,reason,status").eq("status", "open").order("created_at", { ascending: false }).limit(8),
       supabase.from("farm_daily_reports").select("id", { count: "exact", head: true }),
@@ -44,6 +49,7 @@ export default function FarmCommandCenter() {
       supabase.from("farm_action_queue").select("id,title,priority,status,action_type,due_at").neq("status", "completed").order("created_at", { ascending: false }).limit(8),
       supabase.from("farm_exceptions").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("farm_daily_reports").select("id", { count: "exact", head: true }).eq("report_date", today),
+      supabase.from("farm_candidates").select("id,full_name,recommendation_status,verification_status,interview_status,notes,updated_at").order("updated_at", { ascending: false }).limit(100),
     ]);
     setCounts({
       workers: workers.count ?? 0,
@@ -58,6 +64,7 @@ export default function FarmCommandCenter() {
     setPlacements((placementsQ.data ?? []) as Placement[]);
     setActions((actionsQ.data ?? []) as Action[]);
     setReportToday(todayQ.count ?? 0);
+    setCandidates((candidatesQ.data ?? []) as Candidate[]);
     setLoading(false);
     setRefreshing(false);
   }
@@ -71,12 +78,34 @@ export default function FarmCommandCenter() {
       .on("postgres_changes", { event: "*", schema: "public", table: "farm_requisitions" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "farm_placements" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "farm_action_queue" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "farm_candidates" }, load)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
 
   const feeTotal = useMemo(() => placements.reduce((s, p) => s + Number(p.fee_amount ?? 0), 0), [placements]);
   const critical = gaps.filter(g => g.priority === "critical").length;
+  const candidateState = (notes: string | null) => {
+    const n = notes || "";
+    if (n.includes("CORE SHORTLIST")) return "core";
+    if (n.includes("RESERVE SHORTLIST")) return "reserve";
+    if (n.includes("PHASE 2 RELOCATION POOL")) return "phase2";
+    if (n.includes("ON HOLD")) return "hold";
+    return "waiting";
+  };
+  const candidateSummary = useMemo(() => {
+    const summary = { total: candidates.length, core: 0, reserve: 0, hold: 0, phase2: 0, verified: 0, interviewPending: 0, placed: 0 };
+    for (const c of candidates) {
+      const s = candidateState(c.notes);
+      if (s === "core") summary.core++;
+      if (s === "reserve") summary.reserve++;
+      if (s === "hold") summary.hold++;
+      if (s === "phase2") summary.phase2++;
+      if (c.verification_status === "verified") summary.verified++;
+      if (c.interview_status !== "completed") summary.interviewPending++;
+    }
+    return summary;
+  }, [candidates]);
 
   const metrics: Metric[] = [
     { label: "Mapped workforce", value: counts.workers, detail: "Recorded workers only", icon: Users },
@@ -87,6 +116,7 @@ export default function FarmCommandCenter() {
     { label: "Placement fees", value: feeTotal ? `₦${feeTotal.toLocaleString()}` : "Not calculated", detail: "9% of recorded fee base", icon: DollarSign },
     { label: "Open exceptions", value: counts.exceptions, detail: "Requires operational attention", icon: AlertTriangle },
     { label: "Action queue", value: counts.actions, detail: "Outstanding actions", icon: Activity },
+    { label: "CY waiting list", value: candidateSummary.total, detail: `${candidateSummary.core} core shortlist • ${candidateSummary.phase2} Phase 2`, icon: Users },
   ];
 
   return (
@@ -138,6 +168,34 @@ export default function FarmCommandCenter() {
 
         <section className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {metrics.map((m) => <MetricCard key={m.label} metric={m} />)}
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/[.035] p-5 md:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-widest text-amber-300">CY candidate command view • live database</div>
+              <h2 className="mt-1 font-display text-2xl font-bold">22-Candidate Workforce Waiting Matrix</h2>
+              <p className="mt-2 text-xs text-white/45">State is derived from the supplied post-mapping evaluation recorded in the candidate notes. Verification and interview fields remain independently visible.</p>
+            </div>
+            <Link to="/admin/farm-command-center/candidates" className="text-[10px] uppercase tracking-widest text-amber-300">Open candidate pipeline <ArrowRight className="inline h-3 w-3" /></Link>
+          </div>
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+            {[
+              ["Waiting list", candidateSummary.total, "All recorded"],
+              ["Core shortlist", candidateSummary.core, "Final CY consideration"],
+              ["Reserve", candidateSummary.reserve, "Conditional"],
+              ["On hold", candidateSummary.hold, "Redundant / overlap"],
+              ["Phase 2", candidateSummary.phase2, "Relocation standby"],
+              ["Verified", candidateSummary.verified, "Primary verification"],
+              ["Interview pending", candidateSummary.interviewPending, "CY decision stage"],
+            ].map(([label,value,detail]) => <div key={label} className="rounded-xl border border-white/10 bg-black/20 p-3"><div className="font-tactical text-2xl">{value}</div><div className="mt-1 text-[9px] uppercase tracking-widest text-white/55">{label}</div><div className="mt-1 text-[10px] text-white/30">{detail}</div></div>)}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 text-[10px] uppercase tracking-widest">
+            <span className="rounded-full border border-emerald-300/20 bg-emerald-300/5 px-3 py-1 text-emerald-200">9 Core shortlist</span>
+            <span className="rounded-full border border-amber-300/20 bg-amber-300/5 px-3 py-1 text-amber-200">1 Reserve</span>
+            <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">4 On hold</span>
+            <span className="rounded-full border border-sky-300/20 bg-sky-300/5 px-3 py-1 text-sky-200">8 Phase 2</span>
+          </div>
         </section>
 
         <section className="mt-8 grid lg:grid-cols-[1.35fr_.65fr] gap-6">
