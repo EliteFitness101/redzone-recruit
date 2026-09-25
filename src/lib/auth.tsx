@@ -12,13 +12,7 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
-const AuthCtx = createContext<AuthState>({
-  session: null,
-  user: null,
-  roles: [],
-  loading: true,
-  signOut: async () => {},
-});
+const AuthCtx = createContext<AuthState>({ session: null, user: null, roles: [], loading: true, signOut: async () => {} });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -26,13 +20,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listener FIRST, then hydrate.
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
       setSession(s);
       if (!s) setRoles([]);
       else setTimeout(() => loadRoles(s.user.id), 0);
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session && localStorage.getItem("martialx_remember") === "false") {
+        await supabase.auth.signOut();
+        setSession(null); setRoles([]); setLoading(false); return;
+      }
       setSession(data.session);
       if (data.session) loadRoles(data.session.user.id).finally(() => setLoading(false));
       else setLoading(false);
@@ -47,15 +44,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setSession(null);
-    setRoles([]);
+    setSession(null); setRoles([]);
   };
 
-  return (
-    <AuthCtx.Provider value={{ session, user: session?.user ?? null, roles, loading, signOut }}>
-      {children}
-    </AuthCtx.Provider>
-  );
+  return <AuthCtx.Provider value={{ session, user: session?.user ?? null, roles, loading, signOut }}>{children}</AuthCtx.Provider>;
 };
-
 export const useAuth = () => useContext(AuthCtx);
