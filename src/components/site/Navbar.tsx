@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Shield, User, ChevronDown, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 
-const links = [
+type NavItem = { to: string; label: string };
+
+const links: NavItem[] = [
   { to: "/academy", label: "Academy" },
   { to: "/apply", label: "Recruitment" },
   { to: "/pricing", label: "Pricing" },
@@ -15,21 +17,118 @@ const links = [
   { to: "/contact", label: "Contact" },
 ];
 
+const farmLinks: NavItem[] = [
+  { to: "/recruit", label: "Farm Recruitment" },
+  { to: "/admin/farm-command-center", label: "Farm Command Center" },
+  { to: "/admin/farm-command-center/workforce", label: "Workforce" },
+  { to: "/admin/farm-command-center/gaps", label: "Workforce Gaps" },
+  { to: "/admin/farm-command-center/productivity", label: "Productivity" },
+  { to: "/admin/farm-command-center/recruitment", label: "Recruitment Requests" },
+  { to: "/admin/farm-command-center/candidates", label: "Candidates" },
+  { to: "/admin/farm-command-center/placements", label: "Placements" },
+  { to: "/admin/farm-command-center/performance", label: "Performance" },
+  { to: "/admin/farm-command-center/actions", label: "Action Queue" },
+  { to: "/admin/farm-command-center/reports", label: "Executive Reports" },
+  { to: "/admin/farm-command-center/supervisor", label: "Supervisor Console" },
+  { to: "/login?next=%2Fadmin%2Ffarm-command-center", label: "Client Login" },
+];
+
+type MenuPlacement = "below-right" | "below-left" | "above-right" | "above-left";
+
+const getPlacement = (rect: DOMRect): MenuPlacement => {
+  const menuWidth = 288;
+  const menuHeight = Math.min(640, window.innerHeight - 32);
+  const spaceRight = window.innerWidth - rect.right;
+  const spaceLeft = rect.left;
+  const below = window.innerHeight - rect.bottom;
+  const above = rect.top;
+
+  const horizontal: "left" | "right" =
+    spaceRight >= menuWidth || spaceRight >= spaceLeft ? "right" : "left";
+  const vertical: "below" | "above" =
+    below >= menuHeight || below >= above ? "below" : "above";
+
+  return `${vertical}-${horizontal}` as MenuPlacement;
+};
+
+const isActivePath = (to: string, pathname: string) =>
+  to.split("?")[0].split("#")[0] === pathname;
+
+const NavLink = ({ item, pathname, mobile = false, onNavigate }: {
+  item: NavItem;
+  pathname: string;
+  mobile?: boolean;
+  onNavigate?: () => void;
+}) => (
+  <Link
+    to={item.to}
+    onClick={onNavigate}
+    className={cn(
+      mobile
+        ? "block rounded-lg px-3 py-2 text-sm font-medium"
+        : "text-sm font-medium",
+      isActivePath(item.to, pathname)
+        ? "text-gold"
+        : "text-muted-foreground hover:text-gold transition-colors"
+    )}
+  >
+    {item.label}
+  </Link>
+);
+
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [farmsOpen, setFarmsOpen] = useState(false);
+  const [placement, setPlacement] = useState<MenuPlacement>("below-right");
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const farmsRef = useRef<HTMLLIElement>(null);
   const { session, roles } = useAuth();
   const isAdmin = roles.includes("admin");
   const loc = useLocation();
 
+  const updateMenuPosition = () => {
+    const el = farmsRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const nextPlacement = getPlacement(rect);
+    setPlacement(nextPlacement);
+
+    const menuWidth = 288;
+    const menuHeight = Math.min(640, window.innerHeight - 32);
+    const gap = 8;
+    const top =
+      nextPlacement.startsWith("below")
+        ? Math.min(window.innerHeight - menuHeight - 16, rect.bottom + gap)
+        : Math.max(16, rect.top - menuHeight - gap);
+    const left =
+      nextPlacement.endsWith("right")
+        ? Math.min(window.innerWidth - menuWidth - 16, Math.max(16, rect.right - menuWidth))
+        : Math.max(16, Math.min(window.innerWidth - menuWidth - 16, rect.left));
+
+    setMenuStyle({ top, left, width: menuWidth, maxHeight: menuHeight });
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateMenuPosition);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
   }, []);
 
-  useEffect(() => setOpen(false), [loc.pathname]);
+  useEffect(() => {
+    setOpen(false);
+    setFarmsOpen(false);
+  }, [loc.pathname]);
+
+  useEffect(() => {
+    if (!farmsOpen) return;
+    updateMenuPosition();
+  }, [farmsOpen]);
 
   return (
     <header className={cn("fixed top-0 inset-x-0 z-50 transition-all duration-500", scrolled ? "py-2" : "py-4")}>
@@ -48,39 +147,32 @@ export const Navbar = () => {
           </Link>
 
           <ul className="hidden lg:flex items-center gap-8">
-            {links.slice(0, 4).map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} className="text-sm font-medium text-muted-foreground hover:text-gold transition-colors">{l.label}</Link>
+            {links.map((item) => (
+              <li key={item.to} className="shrink-0">
+                <NavLink item={item} pathname={loc.pathname} />
               </li>
             ))}
-            <li className="relative group">
-              <button type="button" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-gold transition-colors" aria-haspopup="true">
-                <Sprout className="h-4 w-4" /> Farms <ChevronDown className="h-3.5 w-3.5" />
+            <li
+              ref={farmsRef}
+              className="shrink-0"
+              onMouseEnter={() => { setFarmsOpen(true); updateMenuPosition(); }}
+              onMouseLeave={() => setFarmsOpen(false)}
+            >
+              <button
+                type="button"
+                className={cn(
+                  "inline-flex items-center gap-1.5 text-sm font-medium transition-colors",
+                  farmsOpen ? "text-gold" : "text-muted-foreground hover:text-gold"
+                )}
+                aria-haspopup="menu"
+                aria-expanded={farmsOpen}
+                onFocus={() => { setFarmsOpen(true); updateMenuPosition(); }}
+                onClick={() => { setFarmsOpen(v => !v); updateMenuPosition(); }}
+              >
+                <Sprout className="h-4 w-4" /> Farms
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", farmsOpen && "rotate-180")} />
               </button>
-              <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 absolute right-0 top-full pt-2 transition-all duration-150">
-                <div className="w-72 rounded-2xl border border-white/10 bg-background/95 backdrop-blur-xl p-2 shadow-2xl">
-                  <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">CY Farm</div>
-                  <Link to="/recruit" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Farm Recruitment</Link>
-                  <Link to="/admin/farm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Farm Command Center</Link>
-                  <Link to="/admin/farm-command-center/workforce" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Workforce</Link>
-                  <Link to="/admin/farm-command-center/gaps" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Workforce Gaps</Link>
-                  <Link to="/admin/farm-command-center/productivity" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Productivity</Link>
-                  <Link to="/admin/farm-command-center/recruitment" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Recruitment Requests</Link>
-                  <Link to="/admin/farm-command-center/candidates" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Candidates</Link>
-                  <Link to="/admin/farm-command-center/placements" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Placements</Link>
-                  <Link to="/admin/farm-command-center/performance" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Performance</Link>
-                  <Link to="/admin/farm-command-center/actions" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Action Queue</Link>
-                  <Link to="/admin/farm-command-center/reports" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Executive Reports</Link>
-                  <Link to="/admin/farm-command-center/supervisor" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Supervisor Console</Link>
-                  <Link to="/login?next=%2Fadmin%2Ffarm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Client Login</Link>
-                </div>
-              </div>
             </li>
-            {links.slice(4).map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} className="text-sm font-medium text-muted-foreground hover:text-gold transition-colors">{l.label}</Link>
-              </li>
-            ))}
           </ul>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -103,33 +195,64 @@ export const Navbar = () => {
           </button>
         </nav>
 
+        {farmsOpen && (
+          <div
+            role="menu"
+            className={cn(
+              "fixed rounded-2xl border border-white/10 bg-background/95 backdrop-blur-xl p-2 shadow-2xl overflow-y-auto",
+              "animate-fade-in"
+            )}
+            style={menuStyle}
+            onMouseEnter={() => setFarmsOpen(true)}
+            onMouseLeave={() => setFarmsOpen(false)}
+          >
+            <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">CY Farm</div>
+            {farmLinks.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                role="menuitem"
+                onClick={() => setFarmsOpen(false)}
+                className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        )}
+
         {open && (
           <div className="lg:hidden mt-2 glass-strong rounded-2xl p-4 animate-fade-in">
             <ul className="flex flex-col gap-1">
-              {links.slice(0, 4).map((l) => (
-                <li key={l.to}><Link to={l.to} className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-gold">{l.label}</Link></li>
+              {links.map((item) => (
+                <li key={item.to}>
+                  <NavLink item={item} pathname={loc.pathname} mobile onNavigate={() => setOpen(false)} />
+                </li>
               ))}
-              <li className="rounded-xl border border-white/10 bg-white/[.02] p-1">
-                <div className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gold"><Sprout className="h-4 w-4" /> Farms</div>
-                <div className="px-3 py-1 text-[11px] uppercase tracking-wider text-muted-foreground">CY Farm</div>
-                <Link to="/recruit" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Farm Recruitment</Link>
-                <Link to="/admin/farm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Farm Command Center</Link>
-                <Link to="/admin/farm-command-center/workforce" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Workforce</Link>
-                <Link to="/admin/farm-command-center/gaps" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Workforce Gaps</Link>
-                <Link to="/admin/farm-command-center/productivity" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Productivity</Link>
-                <Link to="/admin/farm-command-center/recruitment" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Recruitment Requests</Link>
-                <Link to="/admin/farm-command-center/candidates" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Candidates</Link>
-                <Link to="/admin/farm-command-center/placements" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Placements</Link>
-                <Link to="/admin/farm-command-center/performance" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Performance</Link>
-                <Link to="/admin/farm-command-center/actions" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Action Queue</Link>
-                <Link to="/admin/farm-command-center/reports" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Executive Reports</Link>
-                <Link to="/admin/farm-command-center/supervisor" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Supervisor Console</Link>
-                <Link to="/login?next=%2Fadmin%2Ffarm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Client Login</Link>
+              <li className="rounded-xl border border-white/10 bg-white/[.02]">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold text-gold"
+                  aria-expanded={farmsOpen}
+                  onClick={() => setFarmsOpen(v => !v)}
+                >
+                  <span className="flex items-center gap-2"><Sprout className="h-4 w-4" /> Farms</span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", farmsOpen && "rotate-180")} />
+                </button>
+                {farmsOpen && (
+                  <div className="border-t border-white/10 px-2 py-2">
+                    {farmLinks.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        item={item}
+                        pathname={loc.pathname}
+                        mobile
+                        onNavigate={() => { setOpen(false); setFarmsOpen(false); }}
+                      />
+                    ))}
+                  </div>
+                )}
               </li>
-              {links.slice(4).map((l) => (
-                <li key={l.to}><Link to={l.to} className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-gold">{l.label}</Link></li>
-              ))}
-              {session && (<li><Link to="/dashboard" className="block px-3 py-2 rounded-lg text-sm text-gold">Dashboard</Link></li>)}
             </ul>
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="glass" size="sm" asChild>
