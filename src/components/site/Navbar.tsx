@@ -26,6 +26,8 @@ const farmLinks: NavItem[] = [
   { to: "/admin/farm-command-center/recruitment", label: "Recruitment Requests" },
   { to: "/admin/farm-command-center/candidates", label: "Candidates" },
   { to: "/admin/farm-command-center/placements", label: "Placements" },
+  { to: "/admin/farm-command-center/commercial", label: "Commercial Governance" },
+  { to: "/admin/farm-command-center/assurance", label: "Recruitment Assurance" },
   { to: "/admin/farm-command-center/performance", label: "Performance" },
   { to: "/admin/farm-command-center/actions", label: "Action Queue" },
   { to: "/admin/farm-command-center/reports", label: "Executive Reports" },
