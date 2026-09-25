@@ -83,6 +83,8 @@ const App = () => {
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
     <Route path="/admin/cy-recruitment" element={<ProtectedRoute requireRole="admin"><CYRecruitmentMatrix /></ProtectedRoute>} />
     <Route path="/admin/farm-command-center" element={<ProtectedRoute requireRole="admin"><FarmCommandCenter /></ProtectedRoute>} />
+        <Route path="/admin/farm-command-center/supervisor" element={<ProtectedRoute requireRole="admin"><FarmSupervisor /></ProtectedRoute>} />
+        <Route path="/admin/farm-command-center/reports" element={<ProtectedRoute requireRole="admin"><FarmReports /></ProtectedRoute>} />
     <Route path="/admin/farm-command-center/workforce" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
     <Route path="/admin/farm-command-center/gaps" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
     <Route path="/admin/farm-command-center/productivity" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
