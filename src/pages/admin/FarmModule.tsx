@@ -13,7 +13,7 @@ const config: Record<string,{title:string;eyebrow:string;table:string;fields:str
   gaps:{title:"Operational Gap Analysis",eyebrow:"Stage 2",table:"farm_workforce_gaps",fields:["priority","reason","evidence_source","status"]},
   productivity:{title:"Daily & Weekly Productivity",eyebrow:"Stage 3",table:"farm_daily_reports",fields:["report_date","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","operational_issues","observations","health_safety_issues","inputs_used","outputs_recorded","supervisor_notes"]},
   recruitment:{title:"Targeted Recruitment",eyebrow:"Stage 4",table:"farm_requisitions",fields:["position","required_quantity","location","required_qualification","required_experience","farm_experience","availability_requirement","priority","reason","status"]},
-  placements:{title:"Placement Fee Ledger",eyebrow:"Stage 4",table:"farm_placements",fields:["position","placement_date","fee_base","payment_status","invoice_status","replacement_eligibility","notes"]},
+  placements:{title:"Placement Fee Ledger",eyebrow:"Stage 4",table:"farm_placements",fields:["position","placement_date","fee_rate","fee_base","payment_status","invoice_status","replacement_eligibility","notes"]},
   performance:{title:"Post-Placement Performance",eyebrow:"Stage 5",table:"farm_performance_reviews",fields:["review_period","attendance","task_completion","technical_performance","supervisor_feedback","client_feedback","issues","corrective_action","training_requirement","retention_status","replacement_status","review_date"]},
   reports:{title:"Executive Reports",eyebrow:"Executive",table:"farm_daily_reports",fields:[]},
   actions:{title:"Operations Action Queue",eyebrow:"Control",table:"farm_action_queue",fields:["action_type","title","description","priority","status","due_at"]}
@@ -41,16 +41,14 @@ export default function FarmModule(){
     e.preventDefault(); setSaving(true);
     const clean:any={};
     c.fields.forEach(f=>{if(form[f]!==undefined && form[f]!=="") clean[f]=form[f];});
-    if(c.table==="farm_workers") clean.client_id="8f1a95ef-8052-403b-8119-3765e5a8eaeb";
-    if(c.table==="farm_workforce_gaps") clean.client_id="8f1a95ef-8052-403b-8119-3765e5a8eaeb";
-    if(c.table==="farm_daily_reports") clean.client_id="8f1a95ef-8052-403b-8119-3765e5a8eaeb";
-    if(c.table==="farm_requisitions") clean.client_id="8f1a95ef-8052-403b-8119-3765e5a8eaeb";
-    if(c.table==="farm_placements") clean.client_id="8f1a95ef-8052-403b-8119-3765e5a8eaeb";
-    if(c.table==="farm_action_queue") clean.client_id="8f1a95ef-8052-403b-8119-3765e5a8eaeb";
     if(c.table==="farm_performance_reviews") { toast.error("Create a placement first; then attach a 7/30/60/90-day review."); setSaving(false); return; }
     if(["required_quantity","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","fee_base"].some(f=>f in clean)) {
       for(const f of ["required_quantity","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","fee_base"]) if(f in clean) clean[f]=Number(clean[f]);
     }
+    const {data:access}=await supabase.from("farm_user_access").select("client_id,unit_id").eq("user_id",(await supabase.auth.getUser()).data.user?.id).eq("active",true).limit(1).maybeSingle();
+    if(access?.client_id) clean.client_id=access.client_id;
+    if(access?.unit_id && !clean.unit_id) clean.unit_id=access.unit_id;
+    if(c.table==="farm_placements") clean.fee_rate=Number(clean.fee_rate||9);
     const {error}=await supabase.from(c.table).insert(clean);
     setSaving(false);
     if(error) return toast.error(error.message);
