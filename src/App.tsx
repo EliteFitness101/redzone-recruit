@@ -94,6 +94,8 @@ const App = () => {
     <Route path="/admin/farm-command-center/productivity" element={<FarmAccessRoute roles={["operations","executive","supervisor","client"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/recruitment" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/candidates" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmCandidates /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/commercial" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/assurance" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/placements" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/performance" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/actions" element={<FarmAccessRoute roles={["operations","executive","supervisor"]}><FarmModule /></FarmAccessRoute>} />
