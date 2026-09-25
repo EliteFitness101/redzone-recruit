@@ -60,7 +60,17 @@ export const Navbar = () => {
               <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 absolute left-0 top-full pt-2 transition-all duration-150">
                 <div className="w-64 rounded-2xl border border-white/10 bg-background/95 backdrop-blur-xl p-2 shadow-2xl">
                   <Link to="/recruit" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Farm Recruitment</Link>
-                  <Link to="/admin/farm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Farm Dashboard</Link>
+                  <Link to="/admin/farm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Command Center</Link>
+                  <Link to="/admin/farm-command-center/workforce" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Workforce</Link>
+                  <Link to="/admin/farm-command-center/gaps" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Workforce Gaps</Link>
+                  <Link to="/admin/farm-command-center/productivity" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Productivity</Link>
+                  <Link to="/admin/farm-command-center/recruitment" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Recruitment Requests</Link>
+                  <Link to="/admin/farm-command-center/candidates" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Candidates</Link>
+                  <Link to="/admin/farm-command-center/placements" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Placements</Link>
+                  <Link to="/admin/farm-command-center/performance" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Performance</Link>
+                  <Link to="/admin/farm-command-center/actions" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Action Queue</Link>
+                  <Link to="/admin/farm-command-center/reports" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Executive Reports</Link>
+                  <Link to="/admin/farm-command-center/supervisor" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Supervisor Console</Link>
                   <Link to="/login?next=%2Fadmin%2Ffarm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Client Login</Link>
                 </div>
               </div>
@@ -95,13 +105,23 @@ export const Navbar = () => {
         {open && (
           <div className="lg:hidden mt-2 glass-strong rounded-2xl p-4 animate-fade-in">
             <ul className="flex flex-col gap-1">
-              {links.slice(0, 1).map((l) => (
+              {links.slice(0, 2).map((l) => (
                 <li key={l.to}><Link to={l.to} className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-gold">{l.label}</Link></li>
               ))}
               <li className="rounded-xl border border-white/10 bg-white/[.02] p-1">
                 <div className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gold"><Sprout className="h-4 w-4" /> CY Farm</div>
                 <Link to="/recruit" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Farm Recruitment</Link>
-                <Link to="/admin/farm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Farm Dashboard</Link>
+                <Link to="/admin/farm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Command Center</Link>
+                <Link to="/admin/farm-command-center/workforce" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Workforce</Link>
+                <Link to="/admin/farm-command-center/gaps" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Workforce Gaps</Link>
+                <Link to="/admin/farm-command-center/productivity" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Productivity</Link>
+                <Link to="/admin/farm-command-center/recruitment" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Recruitment Requests</Link>
+                <Link to="/admin/farm-command-center/candidates" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Candidates</Link>
+                <Link to="/admin/farm-command-center/placements" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Placements</Link>
+                <Link to="/admin/farm-command-center/performance" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Performance</Link>
+                <Link to="/admin/farm-command-center/actions" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Action Queue</Link>
+                <Link to="/admin/farm-command-center/reports" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Executive Reports</Link>
+                <Link to="/admin/farm-command-center/supervisor" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Supervisor Console</Link>
                 <Link to="/login?next=%2Fadmin%2Ffarm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Client Login</Link>
               </li>
               {links.slice(2).map((l) => (
