@@ -12,7 +12,6 @@ import { FloatingWhatsApp } from "@/components/site/FloatingWhatsApp";
 import { initAnalytics, track } from "@/lib/analytics";
 import { captureAttribution } from "@/lib/attribution";
 import { Loader2 } from "lucide-react";
-
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -35,6 +34,8 @@ const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminApplications = lazy(() => import("./pages/admin/Applications"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const FarmCommandCenter = lazy(() => import("./pages/admin/FarmCommandCenter"));
+const FarmModule = lazy(() => import("./pages/admin/FarmModule"));
 const MartialVerification = lazy(() => import("./pages/MartialVerification"));
 
 const queryClient = new QueryClient();
@@ -45,7 +46,6 @@ const ReferralCapture = () => {
   useEffect(() => { captureAttribution(window.location.search); const ref = sp.get("ref"); if (ref) { localStorage.setItem("mx_ref", ref); track("cta_click", { source: "referral_landing", ref }); } }, [sp]);
   return null;
 };
-
 const RouteTracker = () => {
   const loc = useLocation();
   useEffect(() => { const page = { page_path: loc.pathname, page_location: window.location.href }; window.gtag?.("event", "page_view", page); window.fbq?.("track", "PageView", page); window.ttq?.track("PageView", page); }, [loc.pathname]);
@@ -76,6 +76,15 @@ const App = () => {
     <Route path="/admin" element={<ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute>} />
     <Route path="/admin/applications" element={<ProtectedRoute requireRole="admin"><AdminApplications /></ProtectedRoute>} />
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center" element={<ProtectedRoute requireRole="admin"><FarmCommandCenter /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/workforce" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/gaps" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/productivity" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/recruitment" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/placements" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/performance" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/reports" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
+    <Route path="/admin/farm-command-center/actions" element={<ProtectedRoute requireRole="admin"><FarmModule /></ProtectedRoute>} />
     <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs/:lga" element={<StateLgaHubs />} />
@@ -83,5 +92,4 @@ const App = () => {
     <Route path="*" element={<NotFound />} />
   </Routes></Suspense><FloatingWhatsApp /></AuthProvider></BrowserRouter></TooltipProvider></QueryClientProvider></HelmetProvider></ErrorBoundary>;
 };
-
 export default App;
