@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { randomBytes, createHash } from "node:crypto";
-import { backendClient, json, requestId } from "../../../_lib/recruitment";
+import { backendClient, json, requestId } from "../../../_lib/recruitment.js";
 
 const schema = z.object({ application_reference: z.string().trim().min(3).max(80) });
 
