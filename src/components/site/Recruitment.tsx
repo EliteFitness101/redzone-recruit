@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { getAttribution } from "@/lib/attribution";
+import { submitRecruitmentApplication, startNINAuthVerification } from "@/lib/recruitmentApi";
 import { Link } from "react-router-dom";
 import { waLink, tgLink } from "@/config/site";
 
@@ -49,7 +48,6 @@ const schema = z.object({
 export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const Heading = asH1 ? "h1" : "h2";
   const [busy, setBusy] = useState(false);
-  const { user } = useAuth();
   const started = useRef(false);
 
   const onFirstInput = () => {
@@ -72,26 +70,31 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     const attribution = getAttribution();
     const program = PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest;
     setBusy(true);
-    const { data: application, error } = await supabase.from("applications").insert({
-      full_name: d.full_name,
-      email: d.email,
-      phone: d.phone,
-      location: d.location,
-      age: AGE_RANGES[d.age_range] ?? 21,
-      education: d.profession,
-      fitness_level: d.fitness_level,
-      prior_experience: d.security_experience,
-      program,
-      source: "martial-x-web",
-      notes: JSON.stringify({
-        age_range: d.age_range,
-        profession: d.profession,
-        security_experience: d.security_experience,
-        training_interest: d.training_interest,
-        attribution,
-      }),
-      user_id: user?.id ?? null,
-    }).select("id,reference_number").single();
+    let application: { id: string; reference_number: string | null };
+    try {
+      const result = await submitRecruitmentApplication({
+        full_name: d.full_name,
+        email: d.email,
+        phone: d.phone,
+        location: d.location,
+        age: d.age,
+        education: d.education,
+        fitness_level: d.fitness_level,
+        prior_experience: d.prior_experience,
+        program,
+        source: "redzone-security-recruitment",
+        campaign: d.campaign || undefined,
+        attribution: attribution as never,
+        notes: d.notes,
+      });
+      application = result.application;
+    } catch (error) {
+      setBusy(false);
+      toast.error(error instanceof Error ? error.message : "We could not submit your application. Please try again.");
+      console.error("[security-application]", error);
+      return;
+    }
+
     setBusy(false);
     if (error) return toast.error(error.message);
 
@@ -129,6 +132,14 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       experience: d.security_experience,
       ...attribution,
     });
+    try {
+      const verification = await startNINAuthVerification(reference);
+      window.location.assign(verification.authorization_url);
+      return;
+    } catch {
+      // External NINAuth credentials may not yet be provisioned; application remains valid.
+    }
+
     toast.success("Application received", {
       description: "Admissions will reach you on WhatsApp within 24 hours.",
     });
