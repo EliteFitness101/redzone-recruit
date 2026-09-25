@@ -16,7 +16,8 @@ const config: Record<string,{title:string;eyebrow:string;table:string;fields:str
   placements:{title:"Placement Fee Ledger",eyebrow:"Stage 4",table:"farm_placements",fields:["position","placement_date","fee_rate","fee_base","payment_status","invoice_status","replacement_eligibility","notes"]},
   performance:{title:"Post-Placement Performance",eyebrow:"Stage 5",table:"farm_performance_reviews",fields:["review_period","attendance","task_completion","technical_performance","supervisor_feedback","client_feedback","issues","corrective_action","training_requirement","retention_status","replacement_status","review_date"]},
   reports:{title:"Executive Reports",eyebrow:"Executive",table:"farm_daily_reports",fields:[]},
-  actions:{title:"Operations Action Queue",eyebrow:"Control",table:"farm_action_queue",fields:["action_type","title","description","priority","status","due_at"]},\n  commercial:{title:"Compensation & Engagement Authorization",eyebrow:"CY Commercial Governance",table:"farm_commercial_authorizations",fields:["position","engagement_type","compensation_basis","proposed_amount","currency","output_definition","measurement_unit","payment_frequency","allowances","deductions","contract_start","contract_end","probation_or_trial","replacement_terms","status","approval_reference","evidence_url","notes"]}
+  actions:{title:"Operations Action Queue",eyebrow:"Control",table:"farm_action_queue",fields:["action_type","title","description","priority","status","due_at"]},
+  commercial:{title:"Compensation & Engagement Authorization",eyebrow:"CY Commercial Governance",table:"farm_commercial_authorizations",fields:["position","engagement_type","compensation_basis","proposed_amount","currency","output_definition","measurement_unit","payment_frequency","allowances","deductions","contract_start","contract_end","probation_or_trial","replacement_terms","status","approval_reference","evidence_url","notes"]}
 };
 
 export default function FarmModule(){
@@ -48,7 +49,11 @@ export default function FarmModule(){
     const {data:access}=await supabase.from("farm_user_access").select("client_id,unit_id").eq("user_id",(await supabase.auth.getUser()).data.user?.id).eq("active",true).limit(1).maybeSingle();
     if(access?.client_id) clean.client_id=access.client_id;
     if(access?.unit_id && !clean.unit_id) clean.unit_id=access.unit_id;
-    if(c.table==="farm_placements") clean.fee_rate=Number(clean.fee_rate||9);\n    if(c.table==="farm_commercial_authorizations") {\n      clean.proposed_amount = clean.proposed_amount === undefined ? null : Number(clean.proposed_amount);\n      if(!clean.status) clean.status="awaiting_cy_approval";\n    }
+    if(c.table==="farm_placements") clean.fee_rate=Number(clean.fee_rate||9);
+    if(c.table==="farm_commercial_authorizations") {
+      clean.proposed_amount = clean.proposed_amount === undefined ? null : Number(clean.proposed_amount);
+      if(!clean.status) clean.status="awaiting_cy_approval";
+    }
     const {error}=await supabase.from(c.table).insert(clean);
     setSaving(false);
     if(error) return toast.error(error.message);
