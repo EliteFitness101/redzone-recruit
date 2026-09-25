@@ -35,7 +35,8 @@ export default function FarmCommandCenter() {
   const [actions, setActions] = useState<Action[]>([]);
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [reportToday, setReportToday] = useState(0);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);\n  const [commercial, setCommercial] = useState({ awaiting: 0, approved: 0, active: 0 });
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [commercial, setCommercial] = useState({ awaiting: 0, approved: 0, active: 0 });
 
   async function load() {
     setRefreshing(true);
@@ -49,7 +50,8 @@ export default function FarmCommandCenter() {
       supabase.from("farm_action_queue").select("id,title,priority,status,action_type,due_at").neq("status", "completed").order("created_at", { ascending: false }).limit(8),
       supabase.from("farm_exceptions").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("farm_daily_reports").select("id", { count: "exact", head: true }).eq("report_date", today),
-      supabase.from("farm_candidates").select("id,full_name,recommendation_status,verification_status,interview_status,notes,updated_at").order("updated_at", { ascending: false }).limit(100),\n      supabase.from("farm_commercial_authorizations").select("status"),
+      supabase.from("farm_candidates").select("id,full_name,recommendation_status,verification_status,interview_status,notes,updated_at").order("updated_at", { ascending: false }).limit(100),
+      supabase.from("farm_commercial_authorizations").select("status"),
     ]);
     setCounts({
       workers: workers.count ?? 0,
@@ -64,7 +66,9 @@ export default function FarmCommandCenter() {
     setPlacements((placementsQ.data ?? []) as Placement[]);
     setActions((actionsQ.data ?? []) as Action[]);
     setReportToday(todayQ.count ?? 0);
-    setCandidates((candidatesQ.data ?? []) as Candidate[]);\n    const commercialRows = commercialQ.data ?? [];\n    setCommercial({ awaiting: commercialRows.filter((r:any) => r.status === "awaiting_cy_approval").length, approved: commercialRows.filter((r:any) => ["cy_approved","candidate_acceptance","contract_executed","active","payment_output_tracking"].includes(r.status)).length, active: commercialRows.filter((r:any) => ["active","payment_output_tracking"].includes(r.status)).length });
+    setCandidates((candidatesQ.data ?? []) as Candidate[]);
+    const commercialRows = commercialQ.data ?? [];
+    setCommercial({ awaiting: commercialRows.filter((r:any) => r.status === "awaiting_cy_approval").length, approved: commercialRows.filter((r:any) => ["cy_approved","candidate_acceptance","contract_executed","active","payment_output_tracking"].includes(r.status)).length, active: commercialRows.filter((r:any) => ["active","payment_output_tracking"].includes(r.status)).length });
     setLoading(false);
     setRefreshing(false);
   }
@@ -116,7 +120,8 @@ export default function FarmCommandCenter() {
     { label: "Placement fees", value: feeTotal ? `₦${feeTotal.toLocaleString()}` : "Not calculated", detail: "9% of recorded fee base", icon: DollarSign },
     { label: "Open exceptions", value: counts.exceptions, detail: "Requires operational attention", icon: AlertTriangle },
     { label: "Action queue", value: counts.actions, detail: "Outstanding actions", icon: Activity },
-    { label: "CY waiting list", value: candidateSummary.total, detail: `${candidateSummary.core} core shortlist • ${candidateSummary.phase2} Phase 2`, icon: Users },\n    { label: "Commercial approval", value: commercial.awaiting, detail: commercial.awaiting ? "Awaiting CY approval" : "No pending approvals", icon: DollarSign },
+    { label: "CY waiting list", value: candidateSummary.total, detail: `${candidateSummary.core} core shortlist • ${candidateSummary.phase2} Phase 2`, icon: Users },
+    { label: "Commercial approval", value: commercial.awaiting, detail: commercial.awaiting ? "Awaiting CY approval" : "No pending approvals", icon: DollarSign },
   ];
 
   return (
@@ -198,7 +203,11 @@ export default function FarmCommandCenter() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/[.035] p-5 md:p-6">\n          <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-widest text-amber-300">Commercial governance • CY approval gate</div><h2 className="mt-1 font-display text-xl font-bold">Compensation & Engagement Authorization</h2><p className="mt-2 text-xs text-white/45">Salary, contract, subcontract, output and milestone terms are recorded separately from candidate selection. No compensation is treated as CY-approved until the approval state is explicitly recorded.</p></div><Link to="/admin/farm-command-center/commercial" className="text-[10px] uppercase tracking-widest text-amber-300">Open approval register <ArrowRight className="inline h-3 w-3" /></Link></div>\n          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3"><StatusRow label="Awaiting CY approval" value={String(commercial.awaiting)} good={commercial.awaiting === 0} /><StatusRow label="Approved / executing" value={String(commercial.approved)} good={commercial.approved > 0} /><StatusRow label="Active payment/output tracking" value={String(commercial.active)} good={commercial.active > 0} /></div>\n        </section>\n\n        <section className="mt-8 grid lg:grid-cols-[1.35fr_.65fr] gap-6">
+        <section className="mt-8 rounded-2xl border border-amber-300/20 bg-amber-300/[.035] p-5 md:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-widest text-amber-300">Commercial governance • CY approval gate</div><h2 className="mt-1 font-display text-xl font-bold">Compensation & Engagement Authorization</h2><p className="mt-2 text-xs text-white/45">Salary, contract, subcontract, output and milestone terms are recorded separately from candidate selection. No compensation is treated as CY-approved until the approval state is explicitly recorded.</p></div><Link to="/admin/farm-command-center/commercial" className="text-[10px] uppercase tracking-widest text-amber-300">Open approval register <ArrowRight className="inline h-3 w-3" /></Link></div>
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3"><StatusRow label="Awaiting CY approval" value={String(commercial.awaiting)} good={commercial.awaiting === 0} /><StatusRow label="Approved / executing" value={String(commercial.approved)} good={commercial.approved > 0} /><StatusRow label="Active payment/output tracking" value={String(commercial.active)} good={commercial.active > 0} /></div>
+        </section>\n
+        <section className="mt-8 grid lg:grid-cols-[1.35fr_.65fr] gap-6">
           <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 md:p-6">
             <div className="flex items-center justify-between mb-5"><div><div className="text-[10px] uppercase tracking-widest text-amber-300">Operational units</div><h2 className="mt-1 font-display text-xl font-bold">CY Farm Coverage</h2></div><CalendarDays className="h-5 w-5 text-white/30" /></div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -211,7 +220,8 @@ export default function FarmCommandCenter() {
               <StatusRow label="Workforce data" value={counts.workers ? "Recorded" : "Data required"} good={!!counts.workers} />
               <StatusRow label="Productivity reporting" value={counts.reports ? "Reporting active" : "Awaiting reports"} good={!!counts.reports} />
               <StatusRow label="Recruitment demand" value={counts.requisitions ? "Requests recorded" : "No requests recorded"} good={false} />
-              <StatusRow label="Placement economics" value={feeTotal ? "Calculated" : "Not calculable"} good={!!feeTotal} />\n              <StatusRow label="CY commercial authorization" value={commercial.awaiting ? `${commercial.awaiting} awaiting approval` : "No pending approvals"} good={!commercial.awaiting} />
+              <StatusRow label="Placement economics" value={feeTotal ? "Calculated" : "Not calculable"} good={!!feeTotal} />
+              <StatusRow label="CY commercial authorization" value={commercial.awaiting ? `${commercial.awaiting} awaiting approval` : "No pending approvals"} good={!commercial.awaiting} />
             </div>
           </div>
         </section>
