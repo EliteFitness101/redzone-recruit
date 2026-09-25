@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { backendClient, json, requestId } from "../../../_lib/recruitment";
+import { backendClient, json, requestId } from "../../../_lib/recruitment.js";
 
 export default async function handler(req: Request) {
   const rid = requestId();
