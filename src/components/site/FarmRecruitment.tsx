@@ -100,11 +100,6 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     }
 
     setBusy(false);
-    if (error) {
-      toast.error("We could not submit your application. Please try again.");
-      console.error("[farm-application]", error);
-      return;
-    }
 
     const reference = application.reference_number || application.id;
     track("application_submit", {
