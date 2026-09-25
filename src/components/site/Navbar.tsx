@@ -48,7 +48,7 @@ export const Navbar = () => {
           </Link>
 
           <ul className="hidden lg:flex items-center gap-8">
-            {links.slice(0, 1).map((l) => (
+            {links.slice(0, 2).map((l) => (
               <li key={l.to}>
                 <Link to={l.to} className="text-sm font-medium text-muted-foreground hover:text-gold transition-colors">{l.label}</Link>
               </li>
