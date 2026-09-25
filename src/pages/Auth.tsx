@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, Loader2, KeyRound } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { track } from "@/lib/analytics";
 import { z } from "zod";
@@ -20,15 +20,21 @@ export default function Auth() {
   const [sp] = useSearchParams();
   const next = sp.get("next") ?? "/dashboard";
   const referred = sp.get("ref") ?? undefined;
+  const recoveryMode = sp.get("mode") === "recovery";
   const initial = (sp.get("mode") === "register" ? "register" : "login") as "login" | "register";
   const nav = useNavigate();
   const { session } = useAuth();
   const [tab, setTab] = useState<"login" | "register">(initial);
   const [busy, setBusy] = useState(false);
+  const [recovery, setRecovery] = useState(recoveryMode);
+  const [remember, setRemember] = useState(localStorage.getItem("martialx_remember") !== "false");
 
   useEffect(() => {
-    if (session) nav(next, { replace: true });
-  }, [session, nav, next]);
+    const { data } = supabase.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") setRecovery(true); });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => { if (session && !recovery) nav(next, { replace: true }); }, [session, nav, next, recovery]);
 
   const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,15 +43,12 @@ export default function Auth() {
     const email = emailSchema.safeParse(fd.get("email"));
     const password = passwordSchema.safeParse(fd.get("password"));
     if (!email.success || !password.success) return toast.error("Check your inputs");
+    localStorage.setItem("martialx_remember", remember ? "true" : "false");
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.data, password: password.data,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
     setBusy(false);
     if (error) return toast.error(error.message);
-    track("login");
-    toast.success("Welcome back");
-    nav(next, { replace: true });
+    track("login"); toast.success("Welcome back"); nav(next, { replace: true });
   };
 
   const onRegister = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -55,86 +58,67 @@ export default function Auth() {
     const email = emailSchema.safeParse(fd.get("email"));
     const password = passwordSchema.safeParse(fd.get("password"));
     const full_name = nameSchema.safeParse(fd.get("full_name"));
-    if (!email.success || !password.success || !full_name.success)
-      return toast.error("Check name, email and password");
+    if (!email.success || !password.success || !full_name.success) return toast.error("Check name, email and password");
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email: email.data,
-      password: password.data,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: full_name.data, referred_by: referred },
-      },
-    });
+    const { error } = await supabase.auth.signUp({ email: email.data, password: password.data, options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { full_name: full_name.data, referred_by: referred } } });
     setBusy(false);
     if (error) return toast.error(error.message);
-    track("signup");
-    if (referred) track("referral_signup", { code: referred });
-    toast.success("Account created — you're in.");
-    nav(next, { replace: true });
+    track("signup"); if (referred) track("referral_signup", { code: referred });
+    toast.success("Account created — you're in."); nav(next, { replace: true });
+  };
+
+  const onForgot = async () => {
+    const email = emailSchema.safeParse((document.getElementById("email-l") as HTMLInputElement)?.value);
+    if (!email.success) return toast.error("Enter your email first");
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${window.location.origin}/login?mode=recovery` });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Password reset instructions sent.");
+  };
+
+  const onRecovery = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const password = passwordSchema.safeParse(new FormData(e.currentTarget).get("password"));
+    if (!password.success) return toast.error(password.error.issues[0]?.message ?? "Use a valid password");
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: password.data });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Password updated successfully."); setRecovery(false); nav(next, { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 bg-gradient-hero">
-      <SEO title={tab === "login" ? "Login" : "Register"} path={`/${tab}`} noindex />
+      <SEO title={recovery ? "Reset Password" : tab === "login" ? "Login" : "Register"} path="/login" noindex />
       <div className="glass-strong rounded-3xl w-full max-w-md p-8">
-        <Link to="/" className="flex items-center gap-2 mb-6">
-          <div className="h-10 w-10 rounded-lg bg-gradient-red flex items-center justify-center shadow-red">
-            <Shield className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-          </div>
-          <div className="font-display font-bold tracking-wider">
-            MARTIAL <span className="text-gradient-gold">X</span>
-          </div>
-        </Link>
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "register")}>
-          <TabsList className="grid grid-cols-2 w-full mb-6">
-            <TabsTrigger value="login">Sign In</TabsTrigger>
-            <TabsTrigger value="register">Create Account</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
-            <form onSubmit={onLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="email-l">Email</Label>
-                <Input id="email-l" name="email" type="email" required className="mt-1.5" autoComplete="email" />
-              </div>
-              <div>
-                <Label htmlFor="password-l">Password</Label>
-                <Input id="password-l" name="password" type="password" required className="mt-1.5" autoComplete="current-password" />
-              </div>
-              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
-                {busy ? <Loader2 className="animate-spin" /> : "Sign In"}
-              </Button>
-            </form>
-          </TabsContent>
-          <TabsContent value="register">
-            <form onSubmit={onRegister} className="space-y-4">
-              <div>
-                <Label htmlFor="name-r">Full Name</Label>
-                <Input id="name-r" name="full_name" required className="mt-1.5" autoComplete="name" />
-              </div>
-              <div>
-                <Label htmlFor="email-r">Email</Label>
-                <Input id="email-r" name="email" type="email" required className="mt-1.5" autoComplete="email" />
-              </div>
-              <div>
-                <Label htmlFor="password-r">Password (min 8)</Label>
-                <Input id="password-r" name="password" type="password" required minLength={8} className="mt-1.5" autoComplete="new-password" />
-              </div>
-              {referred && (
-                <p className="text-xs text-gold">Referral code applied: {referred}</p>
-              )}
-              <Button type="submit" variant="gold" size="lg" className="w-full" disabled={busy}>
-                {busy ? <Loader2 className="animate-spin" /> : "Create Account"}
-              </Button>
-              <p className="text-[11px] text-muted-foreground text-center">
-                By creating an account you agree to the{" "}
-                <Link to="/legal/terms-and-conditions" className="text-gold underline underline-offset-2">Terms &amp; Conditions</Link>,{" "}
-                <Link to="/legal/privacy-policy" className="text-gold underline underline-offset-2">Privacy Policy</Link> and{" "}
-                <Link to="/legal/cookie-policy" className="text-gold underline underline-offset-2">Cookie Policy</Link>.
-              </p>
-            </form>
-          </TabsContent>
-        </Tabs>
+        <Link to="/" className="flex items-center gap-2 mb-6"><div className="h-10 w-10 rounded-lg bg-gradient-red flex items-center justify-center shadow-red"><Shield className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} /></div><div className="font-display font-bold tracking-wider">MARTIAL <span className="text-gradient-gold">X</span></div></Link>
+        {recovery ? (
+          <form onSubmit={onRecovery} className="space-y-4">
+            <div><div className="text-xs uppercase tracking-widest text-gold">Secure recovery</div><h1 className="font-display text-2xl font-bold mt-1">Set a new password</h1></div>
+            <div><Label htmlFor="recovery-password">New password</Label><Input id="recovery-password" name="password" type="password" minLength={8} required className="mt-1.5" autoComplete="new-password" /></div>
+            <Button type="submit" variant="gold" size="lg" className="w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : "Update Password"}</Button>
+          </form>
+        ) : (
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "register")}>
+            <TabsList className="grid grid-cols-2 w-full mb-6"><TabsTrigger value="login">Sign In</TabsTrigger><TabsTrigger value="register">Create Account</TabsTrigger></TabsList>
+            <TabsContent value="login"><form onSubmit={onLogin} className="space-y-4">
+              <div><Label htmlFor="email-l">Email</Label><Input id="email-l" name="email" type="email" required className="mt-1.5" autoComplete="email" /></div>
+              <div><Label htmlFor="password-l">Password</Label><Input id="password-l" name="password" type="password" required className="mt-1.5" autoComplete="current-password" /></div>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me on this device</label>
+              <div className="flex items-center justify-between text-xs"><button type="button" onClick={onForgot} className="text-gold hover:underline inline-flex items-center gap-1"><KeyRound className="h-3 w-3" /> Forgot password?</button><span className="text-muted-foreground">Secure Supabase Auth</span></div>
+              <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : "Sign In"}</Button>
+            </form></TabsContent>
+            <TabsContent value="register"><form onSubmit={onRegister} className="space-y-4">
+              <div><Label htmlFor="name-r">Full Name</Label><Input id="name-r" name="full_name" required className="mt-1.5" autoComplete="name" /></div>
+              <div><Label htmlFor="email-r">Email</Label><Input id="email-r" name="email" type="email" required className="mt-1.5" autoComplete="email" /></div>
+              <div><Label htmlFor="password-r">Password (min 8)</Label><Input id="password-r" name="password" type="password" required minLength={8} className="mt-1.5" autoComplete="new-password" /></div>
+              {referred && <p className="text-xs text-gold">Referral code applied: {referred}</p>}
+              <Button type="submit" variant="gold" size="lg" className="w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : "Create Account"}</Button>
+              <p className="text-[11px] text-muted-foreground text-center">By creating an account you agree to the <Link to="/legal/terms-and-conditions" className="text-gold underline underline-offset-2">Terms &amp; Conditions</Link>, <Link to="/legal/privacy-policy" className="text-gold underline underline-offset-2">Privacy Policy</Link> and <Link to="/legal/cookie-policy" className="text-gold underline underline-offset-2">Cookie Policy</Link>.</p>
+            </form></TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );
