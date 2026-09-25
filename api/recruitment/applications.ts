@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { backendClient, json, requestId } from "../_lib/recruitment";
+import { backendClient, json, requestId } from "../_lib/recruitment.js";
 
 const schema = z.object({
   full_name: z.string().trim().min(2).max(100),
