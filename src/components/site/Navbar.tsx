@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Shield, User } from "lucide-react";
+import { Menu, X, Shield, User, ChevronDown, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
@@ -48,11 +48,26 @@ export const Navbar = () => {
           </Link>
 
           <ul className="hidden lg:flex items-center gap-8">
-            {links.map((l) => (
+            {links.slice(0, 1).map((l) => (
               <li key={l.to}>
-                <Link to={l.to} className="text-sm font-medium text-muted-foreground hover:text-gold transition-colors">
-                  {l.label}
-                </Link>
+                <Link to={l.to} className="text-sm font-medium text-muted-foreground hover:text-gold transition-colors">{l.label}</Link>
+              </li>
+            ))}
+            <li className="relative group">
+              <button type="button" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-gold transition-colors" aria-haspopup="true">
+                <Sprout className="h-4 w-4" /> CY Farm <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 absolute left-0 top-full pt-2 transition-all duration-150">
+                <div className="w-64 rounded-2xl border border-white/10 bg-background/95 backdrop-blur-xl p-2 shadow-2xl">
+                  <Link to="/recruit" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Farm Recruitment</Link>
+                  <Link to="/admin/farm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Farm Dashboard</Link>
+                  <Link to="/login?next=%2Fadmin%2Ffarm-command-center" className="block rounded-xl px-3 py-2.5 text-sm hover:bg-secondary hover:text-gold">Client Login</Link>
+                </div>
+              </div>
+            </li>
+            {links.slice(2).map((l) => (
+              <li key={l.to}>
+                <Link to={l.to} className="text-sm font-medium text-muted-foreground hover:text-gold transition-colors">{l.label}</Link>
               </li>
             ))}
           </ul>
@@ -80,16 +95,19 @@ export const Navbar = () => {
         {open && (
           <div className="lg:hidden mt-2 glass-strong rounded-2xl p-4 animate-fade-in">
             <ul className="flex flex-col gap-1">
-              {links.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-gold">
-                    {l.label}
-                  </Link>
-                </li>
+              {links.slice(0, 1).map((l) => (
+                <li key={l.to}><Link to={l.to} className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-gold">{l.label}</Link></li>
               ))}
-              {session && (
-                <li><Link to="/dashboard" className="block px-3 py-2 rounded-lg text-sm text-gold">Dashboard</Link></li>
-              )}
+              <li className="rounded-xl border border-white/10 bg-white/[.02] p-1">
+                <div className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gold"><Sprout className="h-4 w-4" /> CY Farm</div>
+                <Link to="/recruit" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Farm Recruitment</Link>
+                <Link to="/admin/farm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Farm Dashboard</Link>
+                <Link to="/login?next=%2Fadmin%2Ffarm-command-center" className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-gold">Client Login</Link>
+              </li>
+              {links.slice(2).map((l) => (
+                <li key={l.to}><Link to={l.to} className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-gold">{l.label}</Link></li>
+              ))}
+              {session && (<li><Link to="/dashboard" className="block px-3 py-2 rounded-lg text-sm text-gold">Dashboard</Link></li>)}
             </ul>
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="glass" size="sm" asChild>
