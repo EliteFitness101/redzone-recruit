@@ -16,7 +16,7 @@ const config: Record<string,{title:string;eyebrow:string;table:string;fields:str
   placements:{title:"Placement Fee Ledger",eyebrow:"Stage 4",table:"farm_placements",fields:["position","placement_date","fee_rate","fee_base","payment_status","invoice_status","replacement_eligibility","notes"]},
   performance:{title:"Post-Placement Performance",eyebrow:"Stage 5",table:"farm_performance_reviews",fields:["review_period","attendance","task_completion","technical_performance","supervisor_feedback","client_feedback","issues","corrective_action","training_requirement","retention_status","replacement_status","review_date"]},
   reports:{title:"Executive Reports",eyebrow:"Executive",table:"farm_daily_reports",fields:[]},
-  actions:{title:"Operations Action Queue",eyebrow:"Control",table:"farm_action_queue",fields:["action_type","title","description","priority","status","due_at"]}
+  actions:{title:"Operations Action Queue",eyebrow:"Control",table:"farm_action_queue",fields:["action_type","title","description","priority","status","due_at"]},\n  commercial:{title:"Compensation & Engagement Authorization",eyebrow:"CY Commercial Governance",table:"farm_commercial_authorizations",fields:["position","engagement_type","compensation_basis","proposed_amount","currency","output_definition","measurement_unit","payment_frequency","allowances","deductions","contract_start","contract_end","probation_or_trial","replacement_terms","status","approval_reference","evidence_url","notes"]}
 };
 
 export default function FarmModule(){
@@ -42,13 +42,13 @@ export default function FarmModule(){
     const clean:any={};
     c.fields.forEach(f=>{if(form[f]!==undefined && form[f]!=="") clean[f]=form[f];});
     if(c.table==="farm_performance_reviews") { toast.error("Create a placement first; then attach a 7/30/60/90-day review."); setSaving(false); return; }
-    if(["required_quantity","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","fee_base"].some(f=>f in clean)) {
-      for(const f of ["required_quantity","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","fee_base"]) if(f in clean) clean[f]=Number(clean[f]);
+    if(["required_quantity","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","fee_base","proposed_amount"].some(f=>f in clean)) {
+      for(const f of ["required_quantity","workers_present","workers_absent","tasks_planned","tasks_completed","tasks_delayed","fee_base","proposed_amount"]) if(f in clean) clean[f]=Number(clean[f]);
     }
     const {data:access}=await supabase.from("farm_user_access").select("client_id,unit_id").eq("user_id",(await supabase.auth.getUser()).data.user?.id).eq("active",true).limit(1).maybeSingle();
     if(access?.client_id) clean.client_id=access.client_id;
     if(access?.unit_id && !clean.unit_id) clean.unit_id=access.unit_id;
-    if(c.table==="farm_placements") clean.fee_rate=Number(clean.fee_rate||9);
+    if(c.table==="farm_placements") clean.fee_rate=Number(clean.fee_rate||9);\n    if(c.table==="farm_commercial_authorizations") {\n      clean.proposed_amount = clean.proposed_amount === undefined ? null : Number(clean.proposed_amount);\n      if(!clean.status) clean.status="awaiting_cy_approval";\n    }
     const {error}=await supabase.from(c.table).insert(clean);
     setSaving(false);
     if(error) return toast.error(error.message);
@@ -69,7 +69,7 @@ export default function FarmModule(){
       </form>}
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
         <div className="p-4 border-b border-white/10 flex items-center gap-3"><Search className="h-4 w-4 text-white/30"/><Input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search live records…" className="border-0 bg-transparent focus-visible:ring-0"/></div>
-        {loading?<div className="p-12 text-center text-white/35">Loading live records…</div>:filtered.length===0?<div className="p-14 text-center"><CheckCircle2 className="mx-auto h-8 w-8 text-amber-300/50"/><div className="mt-3 text-sm text-white/60">No records yet</div><div className="mt-1 text-xs text-white/30">This is an empty production dataset, not an invented metric.</div></div>:
+        {loading?<div className="p-12 text-center text-white/35">Loading live records…</div>:filtered.length===0?<div className="p-14 text-center"><CheckCircle2 className="mx-auto h-8 w-8 text-amber-300/50"/><div className="mt-3 text-sm text-white/60">No records yet</div><div className="mt-1 text-xs text-white/30">This is an empty production dataset, not an invented metric. For commercial terms, absence means CY approval is still required.</div></div>:
         <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left text-[9px] uppercase tracking-widest text-white/35">{columns.map(x=><th key={x} className="px-4 py-3">{x.replaceAll("_"," ")}</th>)}<th className="px-4 py-3">Created</th></tr></thead><tbody>{filtered.map(r=><tr key={r.id} className="border-t border-white/8">{columns.map(x=><td key={x} className="px-4 py-3 max-w-[260px] truncate">{r[x] == null || r[x]==="" ? "Not recorded" : String(r[x])}</td>)}<td className="px-4 py-3 text-white/35">{r.created_at?new Date(r.created_at).toLocaleString():"—"}</td></tr>)}</tbody></table></div>}
       </div>
     </main>
