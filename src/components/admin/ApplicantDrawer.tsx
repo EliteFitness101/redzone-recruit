@@ -31,6 +31,7 @@ import { InterviewPanel } from "@/components/admin/InterviewPanel";
 import { DocumentsPanel } from "@/components/admin/DocumentsPanel";
 import { TasksPanel } from "@/components/admin/TasksPanel";
 import { waLink } from "@/config/site";
+import { supabase } from "@/integrations/supabase/client";
 
 const selectCls =
   "mt-1.5 flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
@@ -52,14 +53,21 @@ export const ApplicantDrawer = ({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [tagInput, setTagInput] = useState("");
+  const [verifications, setVerifications] = useState<Array<{ verification_type: string; provider: string; status: string; match_result: string | null; performed_at: string | null }>>([]);
 
   const app = application;
   const legacy = parseLegacyNotes(app?.notes ?? null);
 
   const refresh = async (id: string) => {
-    const [a, l] = await Promise.all([listActivity(id), listAuditLogs({ entity_id: id })]);
+    const [a, l, v] = await Promise.all([
+      listActivity(id),
+      listAuditLogs({ entity_id: id }),
+      supabase.from("candidate_verifications").select("verification_type,provider,status,match_result,performed_at").eq("application_id", id).order("created_at", { ascending: false }),
+    ]);
     setActivity(a);
     setAudit(l);
+    if (v.error) throw v.error;
+    setVerifications(v.data ?? []);
   };
 
   useEffect(() => {
@@ -114,6 +122,7 @@ export const ApplicantDrawer = ({
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
                 <TabsTrigger value="interviews">Interviews</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="verification">Verification</TabsTrigger>
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 <TabsTrigger value="audit">Audit</TabsTrigger>
               </TabsList>
@@ -353,6 +362,33 @@ export const ApplicantDrawer = ({
 
               <TabsContent value="documents">
                 <DocumentsPanel applicationId={app.id} canReview />
+              </TabsContent>
+
+              <TabsContent value="verification" className="pt-4 space-y-4">
+                <div className="glass rounded-xl p-4">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Candidate verification</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Only authorized provider results are recorded. Raw NIN/BVN values are not stored in the recruitment database.
+                  </p>
+                </div>
+                {verifications.length === 0 ? (
+                  <Empty>No verification events recorded yet.</Empty>
+                ) : (
+                  <div className="space-y-2">
+                    {verifications.map((v, i) => (
+                      <div key={`${v.verification_type}-${v.provider}-${i}`} className="glass rounded-xl p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-medium text-sm">{v.verification_type.replace(/_/g, " ")}</span>
+                          <Badge variant="secondary" className="text-[10px] uppercase">{v.status.replace(/_/g, " ")}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {v.provider} · {v.match_result ?? "not checked"}
+                          {v.performed_at ? ` · ${new Date(v.performed_at).toLocaleString()}` : ""}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="tasks">

@@ -114,6 +114,8 @@ export default function Admin() {
             <h1 className="font-display text-3xl md:text-4xl font-bold">Admin Console</h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="glass" size="sm" asChild><Link to="/admin/farm-command-center">Farm Command Center</Link></Button>
+            <Button variant="glass" size="sm" asChild><Link to="/admin/cy-recruitment">CY Recruitment Matrix</Link></Button>
             <Button variant="glass" size="sm" asChild><Link to="/admin/applications">Applicant dashboard</Link></Button>
             <Button variant="glass" size="sm" asChild><Link to="/admin/reports">Reports</Link></Button>
           </div>
