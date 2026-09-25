@@ -18,7 +18,7 @@ const schema = z.object({
   notes: z.string().trim().max(5000).optional(),
 });
 
-export default async function handler(req: Request) {
+export async function POST(req: Request) {
   const rid = requestId();
   if (req.method !== "POST") return json({ error: "Method not allowed", request_id: rid }, 405);
   try {
