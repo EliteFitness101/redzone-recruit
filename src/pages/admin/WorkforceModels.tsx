@@ -74,9 +74,9 @@ export default function WorkforceModels() {
       compliance_status: model.activation_status === "production_ready" ? "review_required" : model.activation_status,
       ceo_status: "pending",
       created_by: auth.user?.id,
-    });
+    }).select("id").single();
     if (error) return toast.error(error.message);
-    if (data?.[0]?.id) {
+    if (data?.id) {
       const gates = ["client_mandate","identity_verification","qualification_reference_verification","internal_screening","client_selection","salary_or_commercial_approval","scope_and_licence_review","contract_execution","deployment_activation"];
       await supabase.from("resofit_ceo_approvals").insert(gates.map(gate_key => ({ engagement_id: data[0].id, gate_key, status: "pending", required: true })));
     }
