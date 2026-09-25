@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { json, requestId } from "../../../_lib/recruitment";
+import { json, requestId } from "../../../_lib/recruitment.js";
 
 export default async function handler(req: Request) {
   const rid = requestId();
