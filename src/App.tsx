@@ -37,6 +37,7 @@ const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminApplications = lazy(() => import("./pages/admin/Applications"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
+const CYRecruitmentMatrix = lazy(() => import("./pages/admin/CYRecruitmentMatrix"));
 const MartialVerification = lazy(() => import("./pages/MartialVerification"));
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ const App = () => {
     <Route path="/admin" element={<ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute>} />
     <Route path="/admin/applications" element={<ProtectedRoute requireRole="admin"><AdminApplications /></ProtectedRoute>} />
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
+    <Route path="/admin/cy-recruitment" element={<ProtectedRoute requireRole="admin"><CYRecruitmentMatrix /></ProtectedRoute>} />
     <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs/:lga" element={<StateLgaHubs />} />
