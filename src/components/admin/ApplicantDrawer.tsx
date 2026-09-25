@@ -66,8 +66,7 @@ export const ApplicantDrawer = ({
     ]);
     setActivity(a);
     setAudit(l);
-    if (v.error) throw v.error;
-    setVerifications(v.data ?? []);
+    setVerifications(v.error ? [] : (v.data ?? []));
   };
 
   useEffect(() => {
