@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Shield, User, ChevronDown, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,8 @@ const farmLinks: NavItem[] = [
 
 type MenuPlacement = "below-right" | "below-left" | "above-right" | "above-left";
 
+type PrimaryNavItem = NavItem | { kind: "farms" };
+
 const getPlacement = (rect: DOMRect): MenuPlacement => {
   const menuWidth = 288;
   const menuHeight = Math.min(640, window.innerHeight - 32);
@@ -53,6 +55,10 @@ const getPlacement = (rect: DOMRect): MenuPlacement => {
 
 const isActivePath = (to: string, pathname: string) =>
   to.split("?")[0].split("#")[0] === pathname;
+
+const primaryNav: PrimaryNavItem[] = links.flatMap((item) =>
+  item.to === "/#faq" ? [{ kind: "farms" as const }, item] : [item]
+);
 
 const NavLink = ({ item, pathname, mobile = false, onNavigate }: {
   item: NavItem;
@@ -81,11 +87,24 @@ export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [farmsOpen, setFarmsOpen] = useState(false);
   const [placement, setPlacement] = useState<MenuPlacement>("below-right");
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const farmsCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const farmsRef = useRef<HTMLLIElement>(null);
   const { session, roles } = useAuth();
   const isAdmin = roles.includes("admin");
   const loc = useLocation();
+
+  const cancelFarmsClose = () => {
+    if (farmsCloseTimer.current) {
+      clearTimeout(farmsCloseTimer.current);
+      farmsCloseTimer.current = null;
+    }
+  };
+
+  const closeFarmsSoon = () => {
+    cancelFarmsClose();
+    farmsCloseTimer.current = setTimeout(() => setFarmsOpen(false), 160);
+  };
 
   const updateMenuPosition = () => {
     const el = farmsRef.current;
@@ -123,7 +142,10 @@ export const Navbar = () => {
   useEffect(() => {
     setOpen(false);
     setFarmsOpen(false);
+    cancelFarmsClose();
   }, [loc.pathname]);
+
+  useEffect(() => () => cancelFarmsClose(), []);
 
   useEffect(() => {
     if (!farmsOpen) return;
@@ -147,32 +169,40 @@ export const Navbar = () => {
           </Link>
 
           <ul className="hidden lg:flex items-center gap-8">
-            {links.map((item) => (
-              <li key={item.to} className="shrink-0">
-                <NavLink item={item} pathname={loc.pathname} />
-              </li>
-            ))}
-            <li
-              ref={farmsRef}
-              className="shrink-0"
-              onMouseEnter={() => { setFarmsOpen(true); updateMenuPosition(); }}
-              onMouseLeave={() => setFarmsOpen(false)}
-            >
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex items-center gap-1.5 text-sm font-medium transition-colors",
-                  farmsOpen ? "text-gold" : "text-muted-foreground hover:text-gold"
-                )}
-                aria-haspopup="menu"
-                aria-expanded={farmsOpen}
-                onFocus={() => { setFarmsOpen(true); updateMenuPosition(); }}
-                onClick={() => { setFarmsOpen(v => !v); updateMenuPosition(); }}
-              >
-                <Sprout className="h-4 w-4" /> Farms
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", farmsOpen && "rotate-180")} />
-              </button>
-            </li>
+            {primaryNav.map((item, index) =>
+              "kind" in item ? (
+                <li
+                  key={item.kind + index}
+                  ref={farmsRef}
+                  className="shrink-0"
+                  onMouseEnter={() => { cancelFarmsClose(); setFarmsOpen(true); updateMenuPosition(); }}
+                  onMouseLeave={closeFarmsSoon}
+                >
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex items-center gap-1.5 text-sm font-medium transition-colors",
+                      farmsOpen ? "text-gold" : "text-muted-foreground hover:text-gold"
+                    )}
+                    aria-haspopup="menu"
+                    aria-expanded={farmsOpen}
+                    onFocus={() => { cancelFarmsClose(); setFarmsOpen(true); updateMenuPosition(); }}
+                    onClick={() => {
+                      cancelFarmsClose();
+                      setFarmsOpen(v => !v);
+                      updateMenuPosition();
+                    }}
+                  >
+                    <Sprout className="h-4 w-4" /> Farms
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", farmsOpen && "rotate-180")} />
+                  </button>
+                </li>
+              ) : (
+                <li key={item.to} className="shrink-0">
+                  <NavLink item={item} pathname={loc.pathname} />
+                </li>
+              )
+            )}
           </ul>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -203,8 +233,8 @@ export const Navbar = () => {
               "animate-fade-in"
             )}
             style={menuStyle}
-            onMouseEnter={() => setFarmsOpen(true)}
-            onMouseLeave={() => setFarmsOpen(false)}
+            onMouseEnter={cancelFarmsClose}
+            onMouseLeave={closeFarmsSoon}
           >
             <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">CY Farm</div>
             {farmLinks.map((item) => (
@@ -224,35 +254,38 @@ export const Navbar = () => {
         {open && (
           <div className="lg:hidden mt-2 glass-strong rounded-2xl p-4 animate-fade-in">
             <ul className="flex flex-col gap-1">
-              {links.map((item) => (
-                <li key={item.to}>
-                  <NavLink item={item} pathname={loc.pathname} mobile onNavigate={() => setOpen(false)} />
-                </li>
-              ))}
-              <li className="rounded-xl border border-white/10 bg-white/[.02]">
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold text-gold"
-                  aria-expanded={farmsOpen}
-                  onClick={() => setFarmsOpen(v => !v)}
-                >
-                  <span className="flex items-center gap-2"><Sprout className="h-4 w-4" /> Farms</span>
-                  <ChevronDown className={cn("h-4 w-4 transition-transform", farmsOpen && "rotate-180")} />
-                </button>
-                {farmsOpen && (
-                  <div className="border-t border-white/10 px-2 py-2">
-                    {farmLinks.map((item) => (
-                      <NavLink
-                        key={item.to}
-                        item={item}
-                        pathname={loc.pathname}
-                        mobile
-                        onNavigate={() => { setOpen(false); setFarmsOpen(false); }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </li>
+              {primaryNav.map((item, index) =>
+                "kind" in item ? (
+                  <li key={item.kind + index} className="rounded-xl border border-white/10 bg-white/[.02]">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold text-gold"
+                      aria-expanded={farmsOpen}
+                      onClick={() => setFarmsOpen(v => !v)}
+                    >
+                      <span className="flex items-center gap-2"><Sprout className="h-4 w-4" /> Farms</span>
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", farmsOpen && "rotate-180")} />
+                    </button>
+                    {farmsOpen && (
+                      <div className="border-t border-white/10 px-2 py-2">
+                        {farmLinks.map((farmItem) => (
+                          <NavLink
+                            key={farmItem.to}
+                            item={farmItem}
+                            pathname={loc.pathname}
+                            mobile
+                            onNavigate={() => { setOpen(false); setFarmsOpen(false); }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                ) : (
+                  <li key={item.to}>
+                    <NavLink item={item} pathname={loc.pathname} mobile onNavigate={() => setOpen(false)} />
+                  </li>
+                )
+              )}
             </ul>
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="glass" size="sm" asChild>
