@@ -15,6 +15,8 @@ export interface Attribution {
   gclid?: string;
   ttclid?: string;
   rsid?: string;
+  session_id?: string;
+  anonymous_id?: string;
   funnel_origin?: string;
   landing_page?: string;
   referrer?: string;
@@ -30,6 +32,8 @@ const FIELDS = [
   "gclid",
   "ttclid",
   "rsid",
+  "session_id",
+  "anonymous_id",
   "funnel_origin",
 ] as const;
 
@@ -61,6 +65,8 @@ export function captureAttribution(search: string): Attribution {
       try { return JSON.parse(localStorage.getItem(KEY) || "{}") as Attribution; } catch { return {}; }
     })();
     const found: Attribution = { ...shared, ...stored };
+    if (!found.anonymous_id) found.anonymous_id = `mx-${crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
+    if (!found.session_id) found.session_id = found.anonymous_id;
     FIELDS.forEach((f) => {
       const v = params.get(f);
       if (v) found[f] = v.slice(0, 120);

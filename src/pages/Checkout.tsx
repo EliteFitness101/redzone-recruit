@@ -80,6 +80,8 @@ export default function Checkout() {
         email: parsedEmail.data,
         phone: parsedPhone.data,
         rsid: attribution.rsid,
+        session_id: attribution.session_id,
+        anonymous_id: attribution.anonymous_id,
         ttclid: attribution.ttclid,
         utm_source: attribution.utm_source,
         utm_medium: attribution.utm_medium,
