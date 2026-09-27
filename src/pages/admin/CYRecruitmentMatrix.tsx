@@ -1,392 +1,79 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Award, BriefcaseBusiness, CalendarClock, CheckCircle2, ChevronRight, CircleUserRound, Crown, FileCheck2, Filter, Gem, MapPin, RefreshCw, Search, ShieldCheck, Sparkles, Target, UserCheck, Users, WalletCards, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SEO } from "@/components/SEO";
 import { toast } from "sonner";
-import {
-  ClipboardCheck,
-  FileSearch,
-  Filter,
-  GitBranch,
-  MapPinned,
-  RefreshCw,
-  Search,
-  ShieldCheck,
-  Sprout,
-  Target,
-  UserCheck,
-  Users,
-  WalletCards,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { ApplicantDrawer } from "@/components/admin/ApplicantDrawer";
-import {
-  listAllApplications,
-  listRecruiters,
-  type Application,
-  type Recruiter,
-  type Stage,
-} from "@/lib/recruitment";
+import { listAllApplications, listRecruiters, type Application, type Recruiter } from "@/lib/recruitment";
 import { supabase } from "@/integrations/supabase/client";
 
 const CAMPAIGN = "CY-NWANKWO-FARM-OPERATIONS";
-const MANDATE = [
-  { label: "Graduate Veterinary Officer", qty: 1 },
-  { label: "Graduate Animal Husbandry / Livestock Production Officer", qty: 1 },
-  { label: "Graduate Farm Management / Agricultural Management Officer", qty: 1 },
-  { label: "Farm Assistant / Labourer", qty: 4 },
-] as const;
+type Flow = "all"|"applicants"|"screening"|"verification"|"shortlist"|"interview"|"selected"|"onboarding"|"placed";
+const FLOW: {key:Flow;label:string;icon:any}[] = [
+  {key:"all",label:"Command",icon:Crown},{key:"applicants",label:"Applicants",icon:Users},{key:"screening",label:"Screening",icon:Search},
+  {key:"verification",label:"Verification",icon:ShieldCheck},{key:"shortlist",label:"Shortlist",icon:UserCheck},{key:"interview",label:"CY Interview",icon:CalendarClock},
+  {key:"selected",label:"Selected",icon:Award},{key:"onboarding",label:"Onboarding",icon:FileCheck2},{key:"placed",label:"Placed",icon:Target},
+];
+type V = {application_id:string;verification_type:string;provider:string;status:string;match_result:string|null};
+const stageLabel:Record<string,string>={new:"Applicant",contacted:"Screening",qualified:"Shortlisted",interview_scheduled:"CY Interview",interview_completed:"Interview Complete",accepted:"Selected",enrolled:"Onboarding",certified:"Ready",deployed:"Placed",archived:"Archived"};
+const verified=(r:Application,v:V[])=>v.some(x=>x.application_id===r.id&&x.status==="verified");
+function flow(r:Application,v:V[]):Flow{
+ if(r.stage==="deployed")return"placed"; if(["enrolled","certified"].includes(r.stage))return"onboarding"; if(r.stage==="accepted")return"selected";
+ if(["interview_scheduled","interview_completed"].includes(r.stage))return"interview"; if(r.stage==="qualified")return"shortlist";
+ if(r.stage==="contacted")return verified(r,v)?"verification":"screening"; return"applicants";
+}
+function readiness(r:Application,v:V[]){return Math.round(([r.full_name, r.phone||r.email, r.location, r.education, r.prior_experience, verified(r,v)].filter(Boolean).length/6)*100)}
+function tone(s:string){const x=s.toLowerCase();return x.includes("verified")||x.includes("selected")||x.includes("placed")||x.includes("ready")?"border-emerald-300/25 bg-emerald-300/[.08] text-emerald-200":"border-amber-300/20 bg-amber-300/[.06] text-amber-200"}
 
-const PIPELINE = [
-  ["CY Objectives", Target],
-  ["Workforce Mapping", Users],
-  ["Operational Gap Analysis", FileSearch],
-  ["Priority Roles", ClipboardCheck],
-  ["Targeted Sourcing", Sprout],
-  ["Screen", Search],
-  ["Verify", ShieldCheck],
-  ["Shortlist", UserCheck],
-  ["CY Interview", Users],
-  ["Select", ClipboardCheck],
-  ["Place", MapPinned],
-  ["Measure", Target],
-  ["Report", GitBranch],
-] as const;
-
-const stageLabel: Record<string, string> = {
-  new: "Intake",
-  contacted: "Screening",
-  qualified: "Shortlisted",
-  interview_scheduled: "CY Interview",
-  interview_completed: "Interview Complete",
-  accepted: "Selected",
-  enrolled: "Selected / Onboarding",
-  certified: "Verified / Ready",
-  deployed: "Placed",
-  archived: "Archived",
-};
-
-type VerificationRow = {
-  application_id: string;
-  verification_type: string;
-  provider: string;
-  status: string;
-  match_result: string | null;
-};
-
-export default function CYRecruitmentMatrix() {
-  const [rows, setRows] = useState<Application[]>([]);
-  const [recruiters, setRecruiters] = useState<Recruiter[]>([]);
-  const [verifications, setVerifications] = useState<VerificationRow[]>([]);
-  const [selected, setSelected] = useState<Application | null>(null);
-  const [tab, setTab] = useState("executive");
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [apps, recs] = await Promise.all([
-        listAllApplications({ campaign: CAMPAIGN }),
-        listRecruiters(),
-      ]);
-      setRows(apps);
-      setRecruiters(recs);
-
-      if (apps.length) {
-        const ids = apps.map((a) => a.id);
-        const { data, error } = await supabase
-          .from("candidate_verifications")
-          .select("application_id,verification_type,provider,status,match_result")
-          .in("application_id", ids)
-          .order("created_at", { ascending: false });
-        if (!error) setVerifications((data ?? []) as VerificationRow[]);
-      } else {
-        setVerifications([]);
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not load CY recruitment data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.full_name, r.email, r.phone, r.location, r.program, r.reference_number]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q)),
-    );
-  }, [rows, search]);
-
-  const byStage = useMemo(() => {
-    const result: Record<string, number> = {};
-    for (const row of rows) result[row.stage] = (result[row.stage] ?? 0) + 1;
-    return result;
-  }, [rows]);
-
-  const verifiedIds = useMemo(
-    () =>
-      new Set(
-        verifications
-          .filter((v) => v.status === "verified")
-          .map((v) => v.application_id),
-      ),
-    [verifications],
-  );
-
-  const recruiterName = (id: string | null) =>
-    (id && recruiters.find((r) => r.user_id === id)?.display_name) || "Unassigned";
-
-  const positionCount = (label: string) => rows.filter((r) => r.program === label).length;
-  const placed = rows.filter((r) => r.stage === "deployed").length;
-  const selectedCount = rows.filter((r) => ["accepted", "enrolled", "certified", "deployed"].includes(r.stage)).length;
-  const interviewCount = rows.filter((r) => ["interview_scheduled", "interview_completed"].includes(r.stage)).length;
-  const screened = rows.filter((r) => ["contacted", "qualified", "interview_scheduled", "interview_completed", "accepted", "enrolled", "certified", "deployed"].includes(r.stage)).length;
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <SEO title="CY Farm Recruitment Matrix" path="/admin/cy-recruitment" description="CY Nwankwo farm workforce and recruitment command center" noindex />
-      <main className="pt-10 pb-24 container max-w-7xl">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-7">
-          <div>
-            <div className="text-xs uppercase tracking-[0.25em] text-gold">CY Nwankwo · Ahiaba Ubi Farm</div>
-            <h1 className="font-display text-3xl md:text-5xl font-bold mt-1">Recruitment Matrix</h1>
-            <p className="text-sm text-muted-foreground mt-2 max-w-3xl">
-              Workforce → gap → candidate → verification → CY decision → placement → performance.
-              Only records returned by the existing recruitment system are displayed.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="glass" size="sm" onClick={load} disabled={loading}><RefreshCw className={loading ? "animate-spin" : ""} /> Refresh</Button>
-            <Button variant="glass" size="sm" asChild><Link to="/admin/applications">Full Applicant Console</Link></Button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-32 rounded-3xl" />
-            <Skeleton className="h-14 rounded-2xl" />
-            <Skeleton className="h-96 rounded-3xl" />
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
-              <Metric label="Mandate" value="7" />
-              <Metric label="Applications" value={rows.length} />
-              <Metric label="Screened" value={screened} />
-              <Metric label="Verified" value={verifiedIds.size} />
-              <Metric label="Interview" value={interviewCount} />
-              <Metric label="Selected" value={selectedCount} />
-              <Metric label="Placed" value={placed} />
-              <Metric label="Fee Rate" value="9%" />
-            </div>
-
-            <Tabs value={tab} onValueChange={setTab}>
-              <TabsList className="glass mb-6 flex-wrap h-auto">
-                <TabsTrigger value="executive">Executive</TabsTrigger>
-                <TabsTrigger value="matrix">Recruitment Matrix</TabsTrigger>
-                <TabsTrigger value="workforce">Workforce Mapping</TabsTrigger>
-                <TabsTrigger value="gaps">Gap Analysis</TabsTrigger>
-                <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="executive" className="space-y-6">
-                <section className="glass-strong rounded-3xl p-5 md:p-7">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-gold">CEO / Client Executive Summary</div>
-                      <h2 className="font-display text-2xl md:text-3xl font-bold mt-1">CY Farm Mandate</h2>
-                    </div>
-                    <Badge variant="outline" className="text-gold border-gold/40">LIVE DATA</Badge>
-                  </div>
-                  <div className="mt-6 grid md:grid-cols-3 gap-3">
-                    <SummaryCard title="Objective" text="Establish the workforce structure required to improve accountability and measurable farm output." />
-                    <SummaryCard title="Current recruitment" text={rows.length ? `${rows.length} farm application record(s) in the CY campaign.` : "No CY candidate records currently returned."} />
-                    <SummaryCard title="Placement economics" text="Placement fee = 9% × recorded annual agreed salary. No fee amount is calculated until the salary basis is recorded." />
-                  </div>
-                </section>
-
-                <section className="glass rounded-3xl p-5 md:p-7">
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-gold">Management Alignment</div>
-                  <h2 className="font-display text-xl font-bold mt-1">Decision points for CY</h2>
-                  <div className="mt-5 grid md:grid-cols-2 gap-3">
-                    {[
-                      "1. Single most important operational result for the next 3–6 months.",
-                      "2. Actual workforce headcount by Cattle · Goat · Pig · Palm · General.",
-                      "3. Existing supervisors, reporting lines and accountability.",
-                      "4. Current operational pain points affecting output.",
-                      "5. Confirm the seven-position mandate and priority order.",
-                      "6. Define role → responsibility → daily/weekly output → report → measure.",
-                      "7. Map and measure existing workers before retention/reassignment/retraining/redundancy decisions.",
-                      "8. Confirm qualification, experience, salary, location, accommodation, availability, hours, farm conditions and reporting expectations.",
-                    ].map((x) => <div key={x} className="glass rounded-2xl p-4 text-sm">{x}</div>)}
-                  </div>
-                </section>
-
-                <section className="glass rounded-3xl p-5 md:p-7">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.22em] text-gold">CY Farm Mandate</div>
-                      <h2 className="font-display text-xl font-bold mt-1">Seven positions</h2>
-                    </div>
-                    <WalletCards className="text-gold" />
-                  </div>
-                  <div className="mt-5 grid md:grid-cols-4 gap-3">
-                    {MANDATE.map((m) => (
-                      <div key={m.label} className="glass rounded-2xl p-4">
-                        <div className="text-2xl font-tactical text-gradient-gold">{m.qty}</div>
-                        <div className="text-xs font-semibold mt-1">{m.label}</div>
-                        <div className="text-[10px] text-muted-foreground mt-2">{positionCount(m.label)} application(s)</div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </TabsContent>
-
-              <TabsContent value="matrix">
-                <section className="glass-strong rounded-3xl overflow-hidden">
-                  <div className="p-4 md:p-5 border-b border-border/40 flex flex-wrap gap-3 items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[0.2em] text-gold">CY Farm Workforce & Recruitment Matrix</div>
-                      <p className="text-sm text-muted-foreground mt-1">Position → Candidate → Qualification → Experience → Location → Availability → Screening → Verification → Interview → Client Decision → Placement</p>
-                    </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search candidate / position / location" className="md:w-72" />
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <caption className="sr-only">CY farm recruitment matrix</caption>
-                      <thead>
-                        <tr className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {["Position", "Candidate", "Qualification", "Experience", "Location", "Screening", "Verification", "Interview", "Client Decision", "Placement"].map((h) => <th key={h} scope="col" className="px-4 py-3 whitespace-nowrap">{h}</th>)}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.length === 0 ? (
-                          <tr><td colSpan={10} className="py-14 text-center text-muted-foreground">No CY candidates returned from the recruitment database.</td></tr>
-                        ) : filtered.map((r) => {
-                          const verification = verifications.find((v) => v.application_id === r.id && v.status === "verified");
-                          const interview = ["interview_scheduled", "interview_completed"].includes(r.stage);
-                          const decision = ["accepted", "enrolled", "certified", "deployed"].includes(r.stage);
-                          return (
-                            <tr key={r.id} onClick={() => setSelected(r)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setSelected(r)} className="border-t border-border/40 hover:bg-secondary/30 cursor-pointer focus:outline-none focus:bg-secondary/30">
-                              <td className="px-4 py-3 min-w-64"><div className="font-medium">{r.program || "Not assigned"}</div><div className="text-[10px] text-muted-foreground">{r.reference_number || r.id.slice(0, 8)}</div></td>
-                              <td className="px-4 py-3 whitespace-nowrap"><div className="font-medium">{r.full_name}</div><div className="text-xs text-muted-foreground">{r.phone}</div></td>
-                              <td className="px-4 py-3">{r.education || "Not recorded"}</td>
-                              <td className="px-4 py-3 max-w-64">{r.prior_experience || "Not recorded"}</td>
-                              <td className="px-4 py-3">{r.location || "Not recorded"}</td>
-                              <td className="px-4 py-3"><Status value={stageLabel[r.stage] || r.stage} /></td>
-                              <td className="px-4 py-3"><Status value={verification ? "Verified" : "Not recorded"} /></td>
-                              <td className="px-4 py-3"><Status value={interview ? stageLabel[r.stage] : "Pending"} /></td>
-                              <td className="px-4 py-3"><Status value={decision ? (r.stage === "deployed" ? "Placed" : "Selected") : "Pending"} /></td>
-                              <td className="px-4 py-3"><Status value={r.stage === "deployed" ? "Placed" : "Pending"} /></td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              </TabsContent>
-
-              <TabsContent value="workforce" className="space-y-4">
-                <section className="glass rounded-3xl p-5 md:p-7">
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-gold">Workforce Mapping</div>
-                  <h2 className="font-display text-xl font-bold mt-1">Who → does what → where → reports to whom → produces what → measured how</h2>
-                  <p className="text-sm text-muted-foreground mt-2">Existing worker records are intentionally not invented. Populate this module from CY's confirmed workforce register.</p>
-                  <div className="mt-5 grid md:grid-cols-5 gap-3">
-                    {["Cattle", "Goat", "Pig", "Palm", "General"].map((unit) => <div key={unit} className="glass-strong rounded-2xl p-5"><Sprout className="h-5 w-5 text-gold" /><div className="font-display font-semibold mt-3">{unit}</div><div className="text-xs text-muted-foreground mt-1">Headcount: Not recorded</div><div className="text-xs text-muted-foreground">Supervisor: Not recorded</div><div className="text-xs text-muted-foreground">Output: Not recorded</div></div>)}
-                  </div>
-                </section>
-              </TabsContent>
-
-              <TabsContent value="gaps" className="space-y-4">
-                <section className="glass rounded-3xl p-5 md:p-7">
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-gold">Operational Gap Analysis</div>
-                  <h2 className="font-display text-xl font-bold mt-1">Capacity → Gap → Priority → Recruitment Need</h2>
-                  <div className="mt-5 overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead><tr className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">{["Unit","Required Function","Current Capacity","Gap","Priority","Recruitment Need"].map((h) => <th key={h} className="px-4 py-3">{h}</th>)}</tr></thead>
-                      <tbody>{["Cattle","Goat","Pig","Palm","General"].map((unit) => <tr key={unit} className="border-t border-border/40"><td className="px-4 py-3 font-medium">{unit}</td><td className="px-4 py-3">Not yet defined</td><td className="px-4 py-3">Not recorded</td><td className="px-4 py-3">Not assessed</td><td className="px-4 py-3">Pending CY confirmation</td><td className="px-4 py-3">Pending gap analysis</td></tr>)}</tbody>
-                    </table>
-                  </div>
-                </section>
-              </TabsContent>
-
-              <TabsContent value="pipeline" className="space-y-4">
-                <section className="glass-strong rounded-3xl p-5 md:p-7">
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-gold">End-to-End Recruitment Pipeline</div>
-                  <h2 className="font-display text-xl font-bold mt-1">CY Objectives → Report</h2>
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {PIPELINE.map(([label, Icon], i) => (
-                      <div key={label} className="flex items-center gap-2">
-                        <button type="button" onClick={() => setTab(label === "CY Objectives" ? "executive" : label === "Workforce Mapping" ? "workforce" : label === "Operational Gap Analysis" ? "gaps" : label === "Report" ? "matrix" : "matrix")} className="glass rounded-xl px-3 py-3 text-left hover:border-gold/40 transition-colors">
-                          <Icon className="h-4 w-4 text-gold" />
-                          <div className="text-[10px] uppercase tracking-wider mt-2 whitespace-nowrap">{label}</div>
-                          <div className="text-xs text-muted-foreground mt-1">{pipelineCount(label, { rows, screened, verified: verifiedIds.size, interviewCount, selectedCount, placed })}</div>
-                        </button>
-                        {i < PIPELINE.length - 1 && <span className="text-muted-foreground hidden lg:inline">→</span>}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-                <section className="grid md:grid-cols-4 gap-3">
-                  <Metric label="New / Intake" value={byStage.new ?? 0} />
-                  <Metric label="Screening" value={(byStage.contacted ?? 0) + (byStage.qualified ?? 0)} />
-                  <Metric label="Interview" value={interviewCount} />
-                  <Metric label="Placed" value={placed} />
-                </section>
-              </TabsContent>
-            </Tabs>
-          </>
-        )}
-
-        <ApplicantDrawer
-          application={selected}
-          recruiters={recruiters}
-          onClose={() => setSelected(null)}
-          onChanged={load}
-        />
-      </main>
-    </div>
-  );
+export default function CYRecruitmentMatrix(){
+ const [rows,setRows]=useState<Application[]>([]),[recs,setRecs]=useState<Recruiter[]>([]),[vers,setVers]=useState<V[]>([]),[selected,setSelected]=useState<Application|null>(null),[active,setActive]=useState<Flow>("all"),[search,setSearch]=useState(""),[loading,setLoading]=useState(true);
+ const load=useCallback(async()=>{setLoading(true);try{const [a,r]=await Promise.all([listAllApplications({campaign:CAMPAIGN}),listRecruiters()]);setRows(a);setRecs(r);if(a.length){const {data,error}=await supabase.from("candidate_verifications").select("application_id,verification_type,provider,status,match_result").in("application_id",a.map(x=>x.id)).order("created_at",{ascending:false});if(!error)setVers((data??[]) as V[])}else setVers([])}catch(e){toast.error(e instanceof Error?e.message:"Could not load CY recruitment data")}finally{setLoading(false)}},[]);
+ useEffect(()=>{load()},[load]);
+ const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return rows.filter(r=>(active==="all"||flow(r,vers)===active)&&(!q||[r.full_name,r.email,r.phone,r.location,r.program,r.reference_number,r.education].filter(Boolean).some(x=>String(x).toLowerCase().includes(q))))},[rows,vers,active,search]);
+ const count=(f:Flow)=>f==="all"?rows.length:rows.filter(r=>flow(r,vers)===f).length;
+ const recruiter=(id:string|null)=>(id&&recs.find(r=>r.user_id===id)?.display_name)||"Unassigned";
+ return <div className="mx-bg min-h-screen text-white"><SEO title="CY Farm Luxury Recruitment Command Center" path="/admin/cy-recruitment" description="Premium CY farm recruitment command center" noindex/>
+  <header className="sticky top-0 z-40 border-b border-amber-200/10 bg-[#050505]/85 backdrop-blur-2xl"><div className="mx-auto flex max-w-[1700px] items-center justify-between gap-4 px-4 py-3 md:px-8"><div className="flex items-center gap-3"><div className="lux-icon"><Gem/></div><div><div className="eyebrow">ResoFlex™ Executive Workforce Suite</div><div className="font-display text-lg">CY Farms · Recruitment Command</div></div></div><div className="flex gap-2"><Button variant="glass" size="sm" onClick={load}><RefreshCw className={loading?"mr-2 h-4 w-4 animate-spin":"mr-2 h-4 w-4"}/>Refresh</Button><Button variant="glass" size="sm" asChild><Link to="/admin/farm-command-center">Farm Command</Link></Button></div></div></header>
+  <main className="relative mx-auto max-w-[1700px] px-4 py-7 md:px-8">
+   <section className="lux-hero"><div className="relative grid gap-8 lg:grid-cols-[1.25fr_.75fr] lg:items-end"><div><div className="flex flex-wrap gap-2"><Badge className="border border-amber-300/25 bg-amber-300/10 text-amber-200">LIVE PRODUCTION DATA</Badge><Badge variant="outline" className="border-white/10 text-white/45">{CAMPAIGN}</Badge></div><div className="mt-6 eyebrow flex items-center gap-2"><Sparkles className="h-4 w-4"/> CEO / Client Review Surface</div><h1 className="mt-2 max-w-4xl font-display text-4xl leading-none md:text-6xl">A premium command room for <span className="text-gradient-gold">every candidate decision.</span></h1><p className="mt-5 max-w-3xl text-sm leading-7 text-white/50 md:text-base">Applicant → screening → verification → shortlist → CY interview → selection → onboarding → placement. Every stage is navigable, evidence-led and presented as a decision-ready profile.</p></div><div className="grid grid-cols-2 gap-3">{[[Users,"Applicants",rows.length],[ShieldCheck,"Verified",vers.filter(x=>x.status==="verified").length],[CalendarClock,"Interviews",count("interview")],[Award,"Selected+",rows.filter(r=>["accepted","enrolled","certified","deployed"].includes(r.stage)).length]].map(([I,l,n]:any)=><div className="lux-metric" key={l}><I className="h-4 w-4 text-amber-200/70"/><div className="mt-4 font-tactical text-3xl">{n}</div><div className="eyebrow mt-1">{l}</div></div>)}</div></div></section>
+   <nav className="mt-5 overflow-x-auto pb-1"><div className="flex min-w-max gap-2">{FLOW.map(({key,label,icon:I})=><button key={key} onClick={()=>setActive(key)} className={`flow-tab ${active===key?"flow-active":""}`}><div className="flex items-center justify-between gap-5"><I className="h-4 w-4"/><span className="font-tactical text-lg">{count(key)}</span></div><div className="mt-2 text-xs">{label}</div></button>)}</div></nav>
+   <section className="mt-7"><div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><div className="eyebrow">{active==="all"?"Executive overview":FLOW.find(x=>x.key===active)?.label}</div><h2 className="font-display text-3xl">{active==="all"?"Candidate decision gallery":FLOW.find(x=>x.key===active)?.label}</h2><p className="mt-2 text-sm text-white/40">{active==="all"?"Open any profile for the complete evidence and next-gate view.":"Each record is presented as a premium candidate dossier rather than a generic document row."}</p></div><div className="flex items-center gap-2"><Filter className="h-4 w-4 text-white/25"/><Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search candidate, role, location…" className="w-full border-white/10 bg-white/[.035] md:w-80"/></div></div>
+   {loading?<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[1,2,3,4,5,6].map(i=><Skeleton key={i} className="h-80 rounded-[1.5rem] bg-white/[.035]"/>)}</div>:filtered.length?<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.map(r=><CandidateCard key={r.id} r={r} v={vers} recruiter={recruiter(r.assigned_recruiter)} onOpen={()=>setSelected(r)}/>)}</div>:<Empty active={active}/>}</section>
+   <footer className="mt-12 border-t border-white/10 pt-5 text-[9px] uppercase tracking-[.25em] text-white/25 flex justify-between"><span>ResoFlex™ powered by Resonance Fitness</span><span>Recorded facts only · explicit client decision gates</span></footer>
+  </main>
+  <Detail row={selected} v={vers} recruiter={selected?recruiter(selected.assigned_recruiter):"Unassigned"} close={()=>setSelected(null)}/>
+ </div>
 }
 
-function pipelineCount(label: string, x: { rows: Application[]; screened: number; verified: number; interviewCount: number; selectedCount: number; placed: number }) {
-  if (label === "CY Objectives") return "Decision";
-  if (label === "Workforce Mapping") return "5 units";
-  if (label === "Operational Gap Analysis") return "5 units";
-  if (label === "Priority Roles") return "7 slots";
-  if (label === "Targeted Sourcing" || label === "Screen") return String(label === "Screen" ? x.screened : x.rows.length);
-  if (label === "Verify") return String(x.verified);
-  if (label === "Shortlist") return String(x.rows.filter((r) => ["qualified", "interview_scheduled", "interview_completed", "accepted", "enrolled", "certified", "deployed"].includes(r.stage)).length);
-  if (label === "CY Interview") return String(x.interviewCount);
-  if (label === "Select") return String(x.selectedCount);
-  if (label === "Place") return String(x.placed);
-  if (label === "Measure") return x.placed ? "Active" : "Pending";
-  return "Live";
+function CandidateCard({r,v,recruiter,onOpen}:{r:Application;v:V[];recruiter:string;onOpen:()=>void}){
+ const f=flow(r,v),ok=verified(r,v),pct=readiness(r,v),vc=v.filter(x=>x.application_id===r.id).length;
+ return <button onClick={onOpen} className="candidate-card group"><div className="candidate-top"><div className="flex min-w-0 items-center gap-3"><div className="avatar-lux"><CircleUserRound/></div><div className="min-w-0"><div className="truncate font-display text-lg">{r.full_name||"Name not recorded"}</div><div className="eyebrow mt-1 truncate">{r.reference_number||r.id.slice(0,8)}</div></div></div><Badge className={`shrink-0 ${tone(stageLabel[r.stage]||r.stage)}`}>{stageLabel[r.stage]||r.stage}</Badge></div>
+ <div className="role-lux"><div className="eyebrow">Role / assignment</div><div className="mt-1 text-sm font-medium">{r.program||"Role not recorded"}</div><div className="mt-1 flex items-center gap-1 text-[11px] text-white/35"><MapPin className="h-3 w-3"/>{r.location||"Location not recorded"}</div></div>
+ <div className="grid grid-cols-2 gap-2 mt-4"><Fact label="Education" value={r.education}/><Fact label="Experience" value={r.prior_experience}/><Fact label="Evidence" value={ok?vc+" verification record"+(vc===1?"":"s"):"Not verified"}/><Fact label="Recruiter" value={recruiter}/></div>
+ <div className="mt-5"><div className="flex justify-between eyebrow"><span>Profile readiness</span><span className="text-amber-200/80">{pct}%</span></div><div className="mt-2 h-1.5 rounded-full bg-white/7 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-400 to-yellow-100" style={{width:pct+"%"}}/></div></div>
+ <div className="mt-5 border-t border-white/8 pt-4 flex justify-between items-center"><span className="eyebrow flex items-center gap-2"><i className="h-1.5 w-1.5 rounded-full bg-amber-300"/>{f}</span><span className="eyebrow text-amber-200/70 group-hover:text-white">Open dossier <ChevronRight className="inline h-3.5 w-3.5"/></span></div></button>
 }
+function Fact({label,value}:{label:string;value:string|null}){return <div className="fact-lux"><div className="eyebrow">{label}</div><div className="mt-1 line-clamp-2 text-[11px] leading-5 text-white/55">{value||"Not recorded"}</div></div>}
+function Empty({active}:{active:Flow}){return <div className="lux-empty"><Sparkles className="mx-auto h-7 w-7 text-amber-200/25"/><div className="mt-3 font-display text-lg text-white/55">No records in {active.replace("_"," ")}.</div><div className="mt-1 text-xs text-white/25">Empty production states are preserved; no candidate data is invented.</div></div>}
 
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return <div className="glass rounded-2xl p-4"><div className="font-tactical text-2xl text-gradient-gold">{value}</div><div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">{label}</div></div>;
+function Detail({row,v,recruiter,close}:{row:Application|null;v:V[];recruiter:string;close:()=>void}){
+ if(!row)return null; const ok=verified(row,v),pct=readiness(row,v),f=flow(row,v),records=v.filter(x=>x.application_id===row.id);
+ const checks=[["Identity/contact",Boolean(row.full_name&&(row.phone||row.email))],["Location",Boolean(row.location)],["Education",Boolean(row.education)],["Experience",Boolean(row.prior_experience)],["Verification",ok]];
+ return <Dialog open={!!row} onOpenChange={x=>!x&&close()}><DialogContent className="max-h-[94vh] max-w-6xl overflow-y-auto border-amber-200/15 bg-[#080808] p-0 text-white shadow-[0_40px_140px_rgba(0,0,0,.75)]"><div className="detail-hero"><DialogHeader><div className="flex items-start justify-between gap-5 pr-5"><div className="flex gap-4"><div className="avatar-lux large"><CircleUserRound/></div><div><div className="eyebrow">Candidate intelligence dossier</div><DialogTitle className="mt-1 font-display text-3xl">{row.full_name}</DialogTitle><DialogDescription className="mt-2 text-white/35">{row.reference_number||row.id} · {row.location||"Location not recorded"}</DialogDescription></div></div><Badge className={tone(stageLabel[row.stage]||row.stage)}>{stageLabel[row.stage]||row.stage}</Badge></div></DialogHeader>
+ <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">{[["Current flow",f],["Readiness",pct+"%"],["Verification",ok?"Verified":"Not verified"],["Next gate",nextGate(f)]].map(([a,b])=><div className="profile-metric" key={a}><div className="eyebrow">{a}</div><div className="mt-1 truncate text-sm">{b}</div></div>)}</div></div>
+ <div className="grid gap-5 p-5 md:p-7 lg:grid-cols-[1.35fr_.65fr]"><div className="space-y-5"><Section icon={BriefcaseBusiness} title="Role & experience" eyebrow="CY review"><div className="grid gap-4 sm:grid-cols-2"><DetailField label="Role / assignment" value={row.program}/><DetailField label="Education" value={row.education}/><DetailField label="Prior experience" value={row.prior_experience}/><DetailField label="Capability / fitness" value={row.fitness_level}/><DetailField label="Source" value={row.source}/><DetailField label="Recruiter" value={recruiter}/></div></Section>
+ <Section icon={ShieldCheck} title="Verification evidence" eyebrow="Evidence layer">{records.length?records.map((x,i)=><div key={i} className="evidence-row"><div><div className="text-sm">{x.verification_type||"Verification check"}</div><div className="eyebrow mt-1">{x.provider||"Provider not recorded"}</div></div><Badge className={tone(x.status)}>{x.status}</Badge></div>):<div className="lux-empty small">No verification record returned.</div>}</Section>
+ <Section icon={Sparkles} title="Decision context" eyebrow="Next action"><div className="lux-callout">Current stage: <b>{stageLabel[row.stage]||row.stage}</b>. {nextCopy(f)}<div className="mt-4 flex flex-wrap gap-2"><Badge variant="outline" className="border-amber-200/15 text-amber-100/70">{f==="shortlist"?"CY consideration gate":f==="interview"?"Interview / outcome required":f==="selected"?"Terms remain separate":f==="onboarding"?"Readiness confirmation":f==="placed"?"Retention measurement":"Progress only from recorded evidence"}</Badge></div></div></Section></div>
+ <aside className="space-y-5"><div className="lux-aside"><div className="eyebrow">CEO glance</div><div className="mt-2 font-display text-xl">Decision readiness</div><div className="mt-4 font-tactical text-5xl text-gradient-gold">{pct}%</div><div className="mt-3 h-2 rounded-full bg-white/7 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-400 to-yellow-100" style={{width:pct+"%"}}/></div><div className="mt-5 space-y-2">{checks.map(([l,x])=><div key={l as string} className="flex gap-2 text-xs">{x?<CheckCircle2 className="h-3.5 w-3.5 text-emerald-300"/>:<XCircle className="h-3.5 w-3.5 text-white/20"/>}<span className={x?"text-white/60":"text-white/30"}>{l}</span></div>)}</div></div>
+ <div className="lux-panel"><div className="eyebrow">Contact</div><div className="mt-4 space-y-3"><DetailField label="Phone" value={row.phone}/><DetailField label="Email" value={row.email}/><DetailField label="Availability / cohort" value={row.cohort}/></div></div>
+ <div className="lux-panel"><div className="eyebrow">Governance</div><div className="mt-4 space-y-2"><Governance label="CY decision" value={["accepted","enrolled","certified","deployed"].includes(row.stage)?"Recorded":"Pending"}/><Governance label="Placement" value={row.stage==="deployed"?"Placed":"Not placed"}/><Governance label="Updated" value={new Date(row.updated_at).toLocaleDateString()}/></div></div></aside></div></DialogContent></Dialog>
 }
-
-function Status({ value }: { value: string }) {
-  return <Badge variant={value === "Verified" || value === "Placed" || value === "Selected" ? "default" : "secondary"} className="text-[10px] uppercase whitespace-nowrap">{value}</Badge>;
-}
-
-function SummaryCard({ title, text }: { title: string; text: string }) {
-  return <div className="glass rounded-2xl p-4"><div className="text-[10px] uppercase tracking-widest text-gold">{title}</div><p className="text-sm mt-2 text-muted-foreground">{text}</p></div>;
-}
+function Section({icon:I,title,eyebrow,children}:any){return <section className="lux-panel"><div className="flex items-center gap-2 text-amber-200/60"><I className="h-4 w-4"/><span className="eyebrow">{eyebrow}</span></div><h3 className="mt-1 font-display text-xl">{title}</h3><div className="mt-5">{children}</div></section>}
+function DetailField({label,value}:{label:string;value:string|null}){return <div><div className="eyebrow">{label}</div><div className="mt-1 text-sm leading-6 text-white/65">{value||"Not recorded"}</div></div>}
+function Governance({label,value}:{label:string;value:string}){return <div className="flex justify-between rounded-xl border border-white/7 bg-white/[.02] px-3 py-2.5 text-xs"><span className="text-white/35">{label}</span><span className="text-white/65">{value}</span></div>}
+function nextGate(f:Flow){return ({all:"Review",applicants:"Screen",screening:"Verify",verification:"Shortlist",shortlist:"Interview",interview:"Select",selected:"Onboard",onboarding:"Place",placed:"Measure"} as Record<Flow,string>)[f]}
+function nextCopy(f:Flow){return ({all:"Review the dossier.",applicants:"Complete screening before progression.",screening:"Assess role fit and evidence before verification.",verification:"Review verification evidence before shortlist.",shortlist:"Candidate is at the CY consideration gate.",interview:"CY interview and final decision are required.",selected:"Selection is recorded; engagement terms remain a separate gate.",onboarding:"Confirm onboarding requirements before placement.",placed:"Placement is recorded; continue retention measurement."} as Record<Flow,string>)[f]}
