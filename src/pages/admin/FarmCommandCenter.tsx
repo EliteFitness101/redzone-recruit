@@ -83,6 +83,9 @@ export default function FarmCommandCenter() {
       .on("postgres_changes", { event: "*", schema: "public", table: "farm_placements" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "farm_action_queue" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "farm_candidates" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "farm_workers" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "farm_commercial_authorizations" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "farm_performance_reviews" }, load)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
@@ -179,7 +182,7 @@ export default function FarmCommandCenter() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-[10px] uppercase tracking-widest text-amber-300">CY candidate command view • live database</div>
-              <h2 className="mt-1 font-display text-2xl font-bold">22-Candidate Workforce Waiting Matrix</h2>
+              <h2 className="mt-1 font-display text-2xl font-bold">Workforce Waiting Matrix</h2>
               <p className="mt-2 text-xs text-white/45">State is derived from the supplied post-mapping evaluation recorded in the candidate notes. Verification and interview fields remain independently visible.</p>
             </div>
             <Link to="/admin/farm-command-center/candidates" className="text-[10px] uppercase tracking-widest text-amber-300">Open candidate pipeline <ArrowRight className="inline h-3 w-3" /></Link>
@@ -194,12 +197,6 @@ export default function FarmCommandCenter() {
               ["Verified", candidateSummary.verified, "Primary verification"],
               ["Interview pending", candidateSummary.interviewPending, "CY decision stage"],
             ].map(([label,value,detail]) => <div key={label} className="rounded-xl border border-white/10 bg-black/20 p-3"><div className="font-tactical text-2xl">{value}</div><div className="mt-1 text-[9px] uppercase tracking-widest text-white/55">{label}</div><div className="mt-1 text-[10px] text-white/30">{detail}</div></div>)}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2 text-[10px] uppercase tracking-widest">
-            <span className="rounded-full border border-emerald-300/20 bg-emerald-300/5 px-3 py-1 text-emerald-200">9 Core shortlist</span>
-            <span className="rounded-full border border-amber-300/20 bg-amber-300/5 px-3 py-1 text-amber-200">1 Reserve</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">4 On hold</span>
-            <span className="rounded-full border border-sky-300/20 bg-sky-300/5 px-3 py-1 text-sky-200">8 Phase 2</span>
           </div>
         </section>
 

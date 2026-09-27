@@ -6,7 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 type FarmRole = "owner" | "client" | "operations" | "supervisor" | "executive";
 
-export function FarmAccessRoute({ children, roles }: { children: React.ReactNode; roles?: FarmRole[] }) {
+export function FarmAccessRoute({ children, roles, clientId }: {
+  children: React.ReactNode;
+  roles?: FarmRole[];
+  clientId?: string;
+}) {
   const { user, session, loading: authLoading } = useAuth();
   const loc = useLocation();
   const [checking, setChecking] = useState(true);
@@ -15,15 +19,32 @@ export function FarmAccessRoute({ children, roles }: { children: React.ReactNode
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (!session || !user) { if (alive) { setAllowed(false); setChecking(false); } return; }
+      if (!session || !user) {
+        if (alive) { setAllowed(false); setChecking(false); }
+        return;
+      }
       const { data: admin } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-      if (admin) { if (alive) { setAllowed(true); setChecking(false); } return; }
-      const { data } = await supabase.from("farm_user_access").select("access_role").eq("user_id", user.id).eq("active", true);
-      const ok = (data ?? []).some((r: any) => r.access_role === "owner") || !roles?.length || (data ?? []).some((r: any) => roles.includes(r.access_role));
+      if (admin) {
+        if (alive) { setAllowed(true); setChecking(false); }
+        return;
+      }
+
+      let accessQuery = supabase.from("farm_user_access")
+        .select("access_role,client_id")
+        .eq("user_id", user.id)
+        .eq("active", true);
+      if (clientId) accessQuery = accessQuery.eq("client_id", clientId);
+
+      const { data, error } = await accessQuery;
+      const rows = data ?? [];
+      const roleAllowed = !roles?.length ||
+        rows.some((r: any) => r.access_role === "owner") ||
+        rows.some((r: any) => roles.includes(r.access_role));
+      const ok = !error && rows.length > 0 && roleAllowed;
       if (alive) { setAllowed(ok); setChecking(false); }
     })();
     return () => { alive = false; };
-  }, [session, user?.id, roles?.join("|")]);
+  }, [session, user?.id, roles?.join("|"), clientId]);
 
   if (authLoading || checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gold" /></div>;
   if (!session) return <Navigate to={`/cy-farm?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
