@@ -45,6 +45,7 @@ const FarmCandidates = lazy(() => import("./pages/admin/FarmCandidates"));
 const FarmAccessRoute = lazy(() => import("./pages/admin/FarmAccessRoute").then(m => ({ default: m.FarmAccessRoute })));
 const MartialVerification = lazy(() => import("./pages/MartialVerification"));
 const WorkforceModels = lazy(() => import("./pages/admin/WorkforceModels"));
+const CYFarmAccess = lazy(() => import("./pages/CYFarmAccess"));
 
 const queryClient = new QueryClient();
 const Fallback = () => <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-gold" /></div>;
@@ -88,6 +89,7 @@ const App = () => {
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
     <Route path="/admin/cy-recruitment" element={<ProtectedRoute requireRole="admin"><CYRecruitmentMatrix /></ProtectedRoute>} />
     <Route path="/admin/workforce-models" element={<ProtectedRoute requireRole="admin"><WorkforceModels /></ProtectedRoute>} />
+    <Route path="/cy-farm" element={<CYFarmAccess />} />
     <Route path="/admin/farm-command-center" element={<FarmAccessRoute><FarmCommandCenter /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/supervisor" element={<FarmAccessRoute roles={["supervisor"]}><FarmSupervisor /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/reports" element={<FarmAccessRoute roles={["executive","operations"]}><FarmReports /></FarmAccessRoute>} />
