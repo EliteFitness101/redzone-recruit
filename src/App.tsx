@@ -90,19 +90,19 @@ const App = () => {
     <Route path="/admin/cy-recruitment" element={<ProtectedRoute requireRole="admin"><CYRecruitmentMatrix /></ProtectedRoute>} />
     <Route path="/admin/workforce-models" element={<ProtectedRoute requireRole="admin"><WorkforceModels /></ProtectedRoute>} />
     <Route path="/cy-farm" element={<CYFarmAccess />} />
-    <Route path="/admin/farm-command-center" element={<FarmAccessRoute><FarmCommandCenter /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/supervisor" element={<FarmAccessRoute roles={["supervisor"]}><FarmSupervisor /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/reports" element={<FarmAccessRoute roles={["executive","operations"]}><FarmReports /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/workforce" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/gaps" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/productivity" element={<FarmAccessRoute roles={["operations","executive","supervisor","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/recruitment" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/candidates" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmCandidates /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/commercial" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/assurance" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/placements" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/performance" element={<FarmAccessRoute roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
-    <Route path="/admin/farm-command-center/actions" element={<FarmAccessRoute roles={["operations","executive","supervisor"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb"><FarmCommandCenter /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/supervisor" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["supervisor"]}><FarmSupervisor /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/reports" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["executive","operations","client"]}><FarmReports /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/workforce" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/gaps" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/productivity" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","supervisor","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/recruitment" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/candidates" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmCandidates /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/commercial" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/assurance" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/placements" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/performance" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","client"]}><FarmModule /></FarmAccessRoute>} />
+    <Route path="/admin/farm-command-center/actions" element={<FarmAccessRoute clientId="8f1a95ef-8052-403b-8119-3765e8a8eaeb" roles={["operations","executive","supervisor"]}><FarmModule /></FarmAccessRoute>} />
     <Route path="/state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs" element={<StateLgaHubs />} />
     <Route path="/state/:state/lga/hubs/:lga" element={<StateLgaHubs />} />
