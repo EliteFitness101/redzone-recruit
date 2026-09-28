@@ -37,9 +37,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  async function loadRoles(uid: string) {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    setRoles((data ?? []).map((r) => r.role as AppRole));
+  async function loadRoles(_uid: string) {
+    // Resolve authorization through a server-controlled RPC bound to auth.uid().
+    // This avoids relying on direct client reads of user_roles/RLS for role loading.
+    const { data, error } = await supabase.rpc("get_my_app_roles");
+    if (error) {
+      console.error("Failed to load application roles", error);
+      setRoles([]);
+      return;
+    }
+    setRoles((data ?? []).map((r: { role: string }) => r.role as AppRole));
   }
 
   const signOut = async () => {
