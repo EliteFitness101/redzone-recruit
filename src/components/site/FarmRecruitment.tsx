@@ -214,7 +214,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
 
               <div>
                 <Label htmlFor="location">Current Location / Community</Label>
-                <Input id="location" name="location" required maxLength={100} placeholder="Aba / Umuahia / Ahiaba Ubi..." />
+                <Input id="location" name="location" required maxLength={100} placeholder="Aba / Umuahia / your community..." />
               </div>
 
               <div>
@@ -261,7 +261,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
 
               <label className="flex gap-3 items-start text-sm">
                 <input type="checkbox" name="field_ready" value="yes" required className="mt-1 h-4 w-4" />
-                <span>I am willing to work on-site at Ahiaba Ubi Autonomous Community, Isiala Ngwa North, Abia State.</span>
+                <span>I am willing to work on-site at the assigned farm location.</span>
               </label>
 
               <label className="flex gap-3 items-start text-sm">
