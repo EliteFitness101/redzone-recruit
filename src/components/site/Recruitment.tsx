@@ -43,7 +43,7 @@ const schema = z.object({
   phone: z.string().trim().min(7, "Enter a valid phone number").max(20),
   location: z.string().trim().min(2, "Enter your city").max(80),
   age_range: z.string().min(2, "Select your age range"),
-  application_track: z.enum(["Security", "CY Farm Operations"]),
+  application_track: z.enum(["Security", "Farm Operations"]),
   profession: z.string().trim().min(2, "Enter your current profession").max(80),
   security_experience: z.string().min(2, "Select your security experience"),
   training_interest: z.string().min(2, "Select a training interest"),
@@ -56,7 +56,7 @@ const schema = z.object({
   farm_availability: z.string().trim().max(80),
   farm_salary_expectation: z.string().trim().max(80),
 }).superRefine((d, ctx) => {
-  if (d.application_track === "CY Farm Operations") {
+  if (d.application_track === "Farm Operations") {
     if (!d.farm_position) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_position"], message: "Select the CY Farm position" });
     if (!d.farm_unit) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_unit"], message: "Select the preferred farm unit" });
     if (!d.farm_qualification) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_qualification"], message: "Enter your qualification" });
@@ -68,7 +68,7 @@ const schema = z.object({
 export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const Heading = asH1 ? "h1" : "h2";
   const [busy, setBusy] = useState(false);
-  const [applicationTrack, setApplicationTrack] = useState<"Security" | "CY Farm Operations">("Security");
+  const [applicationTrack, setApplicationTrack] = useState<"Security" | "Farm Operations">("Security");
   const { user } = useAuth();
   const started = useRef(false);
 
@@ -90,7 +90,7 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     }
     const d = parsed.data;
     const attribution = getAttribution();
-    const program = d.application_track === "CY Farm Operations" ? `CY Farm Operations — ${d.farm_position}` : (PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest);
+    const program = d.application_track === "Farm Operations" ? `CY Farm Operations — ${d.farm_position}` : (PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest);
     setBusy(true);
     const { data: application, error } = await supabase.from("applications").insert({
       full_name: d.full_name,
@@ -100,17 +100,17 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       age: AGE_RANGES[d.age_range] ?? 21,
       education: d.profession,
       fitness_level: d.fitness_level,
-      prior_experience: d.application_track === "CY Farm Operations" ? d.farm_experience : d.security_experience,
+      prior_experience: d.application_track === "Farm Operations" ? d.farm_experience : d.security_experience,
       program,
-      source: d.application_track === "CY Farm Operations" ? "cy-nwankwo-farm-recruitment" : "martial-x-web",
-      campaign: d.application_track === "CY Farm Operations" ? "CY-NWANKWO-FARM-OPERATIONS" : null,
+      source: d.application_track === "Farm Operations" ? "farm-recruitment" : "martial-x-web",
+      campaign: d.application_track === "Farm Operations" ? "FARM-OPERATIONS" : null,
       notes: JSON.stringify({
         application_track: d.application_track,
         age_range: d.age_range,
         profession: d.profession,
         security_experience: d.security_experience,
         training_interest: d.training_interest,
-        ...(d.application_track === "CY Farm Operations" ? { farm_position: d.farm_position, farm_unit: d.farm_unit, farm_qualification: d.farm_qualification, farm_experience_years: d.farm_experience_years, farm_experience: d.farm_experience, farm_availability: d.farm_availability, farm_salary_expectation: d.farm_salary_expectation } : {}),
+        ...(d.application_track === "Farm Operations" ? { farm_position: d.farm_position, farm_unit: d.farm_unit, farm_qualification: d.farm_qualification, farm_experience_years: d.farm_experience_years, farm_experience: d.farm_experience, farm_availability: d.farm_availability, farm_salary_expectation: d.farm_salary_expectation } : {}),
         attribution,
       }),
       user_id: user?.id ?? null,
@@ -151,9 +151,9 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
           training_interest: d.training_interest,
           application_track: d.application_track,
           location: d.location,
-          source: d.application_track === "CY Farm Operations" ? "cy-nwankwo-farm-recruitment" : "martial-x-web",
-          farm_position: d.application_track === "CY Farm Operations" ? d.farm_position : null,
-          farm_unit: d.application_track === "CY Farm Operations" ? d.farm_unit : null,
+          source: d.application_track === "Farm Operations" ? "farm-recruitment" : "martial-x-web",
+          farm_position: d.application_track === "Farm Operations" ? d.farm_position : null,
+          farm_unit: d.application_track === "Farm Operations" ? d.farm_unit : null,
         },
         adapters: ["martial-whatsapp"],
       },
@@ -164,16 +164,16 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       location: d.location,
       training_interest: d.training_interest,
       program,
-      experience: d.application_track === "CY Farm Operations" ? d.farm_experience_years : d.security_experience,
+      experience: d.application_track === "Farm Operations" ? d.farm_experience_years : d.security_experience,
       ...attribution,
     });
     toast.success("Application received", {
-      description: d.application_track === "CY Farm Operations" ? "Your CY Farm application has been received for verification." : "Admissions will reach you on WhatsApp within 24 hours.",
+      description: d.application_track === "Farm Operations" ? "Your CY Farm application has been received for verification." : "Admissions will reach you on WhatsApp within 24 hours.",
     });
     form.reset();
     setTimeout(() => {
       window.open(
-        waLink(d.application_track === "CY Farm Operations" ? `Hi CY Farm Recruitment, I just submitted a farm application (${d.full_name}, ${d.location} — ${d.farm_position}). Please confirm next steps.` : `Hi Martial X Admissions, I just submitted an application (${d.full_name}, ${d.location} — ${d.training_interest}). Please onboard me.`),
+        waLink(d.application_track === "Farm Operations" ? `Hi CY Farm Recruitment, I just submitted a farm application (${d.full_name}, ${d.location} — ${d.farm_position}). Please confirm next steps.` : `Hi Martial X Admissions, I just submitted an application (${d.full_name}, ${d.location} — ${d.training_interest}). Please onboard me.`),
         "_blank",
       );
     }, 600);
@@ -271,13 +271,13 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
               </div>
               <div>
                 <Label htmlFor="application_track">Application Track</Label>
-                <select id="application_track" name="application_track" required value={applicationTrack} onChange={(e) => setApplicationTrack(e.target.value as "Security" | "CY Farm Operations")} className={selectCls}>
+                <select id="application_track" name="application_track" required value={applicationTrack} onChange={(e) => setApplicationTrack(e.target.value as "Security" | "Farm Operations")} className={selectCls}>
                   <option value="Security">Security / Martial X</option>
-                  <option value="CY Farm Operations">CY Farm Operations</option>
+                  <option value="Farm Operations">CY Farm Operations</option>
                 </select>
               </div>
 
-              {applicationTrack === "CY Farm Operations" && (
+              {applicationTrack === "Farm Operations" && (
                 <div className="rounded-2xl border border-gold/20 bg-gold/[.04] p-4 space-y-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gold"><Sprout className="h-4 w-4" /> CY Farm Application Details</div>
                   <div className="grid sm:grid-cols-2 gap-4">
