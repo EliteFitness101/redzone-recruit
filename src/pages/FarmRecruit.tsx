@@ -9,9 +9,9 @@ export default function FarmRecruit() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SEO
-        title="Farm Recruitment — CY Nwankwo Farm Operations"
+        title="Farm Recruitment"
         path="/recruit"
-        description="Immediate recruitment for a seven-person farm operations team covering cattle, goats and palm plantation operations at Ahiaba Ubi Autonomous Community, Isiala Ngwa North, Abia State."
+        description="Recruit qualified professionals and farm assistants for verified agricultural workforce opportunities."
       />
       <Navbar />
       <main className="pt-24">
