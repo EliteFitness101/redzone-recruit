@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import FarmInvitationPanel from "@/components/FarmInvitationPanel";
 
 type Row = Record<string, any>;
 
@@ -120,6 +121,8 @@ export default function Admin() {
             <Button variant="glass" size="sm" asChild><Link to="/admin/reports">Reports</Link></Button>
           </div>
         </div>
+
+        <FarmInvitationPanel />
 
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-gold" /></div>
