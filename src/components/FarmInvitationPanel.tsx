@@ -14,7 +14,7 @@ export default function FarmInvitationPanel() {
   const [role,setRole]=useState("client");
   const [busy,setBusy]=useState(false);
 
-  useEffect(()=>{(async()=>{const {data,error}=await supabase.from("farm_clients").select("id,name,code").eq("status","active").order("name");if(error)return toast.error(error.message);setClients(data??[]);if(data?.[0])setClientId(data[0].id);})();},[]);
+  useEffect(()=>{(async()=>{const {data,error}=await supabase.rpc("get_admin_farm_clients");if(error)return toast.error(error.message);setClients(data??[]);if(data?.[0])setClientId(data[0].id);})();},[]);
 
   const send=async(e:React.FormEvent)=>{e.preventDefault();if(!clientId||!email.trim())return toast.error("Select a client tenant and enter the recipient email.");setBusy(true);const {data,error}=await supabase.functions.invoke("cy-farm-invite",{body:{email:email.trim(),client_id:clientId,access_role:role}});setBusy(false);if(error||!data?.ok)return toast.error(data?.error||error?.message||"Invitation could not be sent.");toast.success("Invitation sent. The recipient can now set a password and enter the Command Center.");setEmail("");};
 
