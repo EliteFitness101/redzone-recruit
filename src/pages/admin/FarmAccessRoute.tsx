@@ -9,7 +9,7 @@ type FarmRole = "owner" | "client" | "operations" | "supervisor" | "executive";
 export function FarmAccessRoute({ children, roles, clientId }: {
   children: React.ReactNode;
   roles?: FarmRole[];
-  clientId?: string;
+
 }) {
   const { user, session, loading: authLoading } = useAuth();
   const loc = useLocation();
@@ -29,11 +29,10 @@ export function FarmAccessRoute({ children, roles, clientId }: {
         return;
       }
 
-      let accessQuery = supabase.from("farm_user_access")
+      const accessQuery = supabase.from("farm_user_access")
         .select("access_role,client_id")
         .eq("user_id", user.id)
         .eq("active", true);
-      if (clientId) accessQuery = accessQuery.eq("client_id", clientId);
 
       const { data, error } = await accessQuery;
       const rows = data ?? [];
@@ -44,7 +43,7 @@ export function FarmAccessRoute({ children, roles, clientId }: {
       if (alive) { setAllowed(ok); setChecking(false); }
     })();
     return () => { alive = false; };
-  }, [session, user?.id, roles?.join("|"), clientId]);
+  }, [session, user?.id, roles?.join("|")]);
 
   if (authLoading || checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gold" /></div>;
   if (!session) return <Navigate to={`/cy-farm?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
