@@ -46,7 +46,7 @@ export function FarmAccessRoute({ children, roles }: {
   }, [session, user?.id, roles?.join("|")]);
 
   if (authLoading || checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gold" /></div>;
-  if (!session) return <Navigate to={`/cy-farm?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
-  if (!allowed) return <Navigate to="/cy-farm?denied=1" replace />;
+  if (!session) return <Navigate to={`/farm/access?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
+  if (!allowed) return <Navigate to="/farm/access?denied=1" replace />;
   return <>{children}</>;
 }
