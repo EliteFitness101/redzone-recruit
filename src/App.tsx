@@ -36,7 +36,7 @@ const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminApplications = lazy(() => import("./pages/admin/Applications"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
-const CYRecruitmentMatrix = lazy(() => import("./pages/admin/CYRecruitmentMatrix"));
+const RecruitmentMatrix = lazy(() => import("./pages/admin/RecruitmentMatrix"));
 const FarmCommandCenter = lazy(() => import("./pages/admin/FarmCommandCenter"));
 const FarmModule = lazy(() => import("./pages/admin/FarmModule"));
 const FarmSupervisor = lazy(() => import("./pages/admin/FarmSupervisor"));
@@ -45,7 +45,7 @@ const FarmCandidates = lazy(() => import("./pages/admin/FarmCandidates"));
 const FarmAccessRoute = lazy(() => import("./pages/admin/FarmAccessRoute").then(m => ({ default: m.FarmAccessRoute })));
 const MartialVerification = lazy(() => import("./pages/MartialVerification"));
 const WorkforceModels = lazy(() => import("./pages/admin/WorkforceModels"));
-const CYFarmAccess = lazy(() => import("./pages/CYFarmAccess"));
+const FarmAccess = lazy(() => import("./pages/FarmAccess"));
 
 const queryClient = new QueryClient();
 const Fallback = () => <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-gold" /></div>;
@@ -71,7 +71,7 @@ const App = () => {
     <Route path="/academy/:slug/:lessonSlug" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
     <Route path="/certificate/:code" element={<CertificatePage />} />
     <Route path="/apply" element={<Apply />} />
-    <Route path="/recruit" element={<FarmRecruit />} />
+    <Route path="/farm" element={<FarmRecruit />} />
     <Route path="/general-recruits" element={<GeneralRecruits />} />
     <Route path="/contact" element={<Contact />} />
     <Route path="/legal" element={<Legal />} />
@@ -87,9 +87,9 @@ const App = () => {
     <Route path="/admin" element={<ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute>} />
     <Route path="/admin/applications" element={<ProtectedRoute requireRole="admin"><AdminApplications /></ProtectedRoute>} />
     <Route path="/admin/reports" element={<ProtectedRoute requireRole="admin"><AdminReports /></ProtectedRoute>} />
-    <Route path="/admin/cy-recruitment" element={<ProtectedRoute requireRole="admin"><CYRecruitmentMatrix /></ProtectedRoute>} />
+    <Route path="/admin/recruitment-matrix" element={<ProtectedRoute requireRole="admin"><RecruitmentMatrix /></ProtectedRoute>} />
     <Route path="/admin/workforce-models" element={<ProtectedRoute requireRole="admin"><WorkforceModels /></ProtectedRoute>} />
-    <Route path="/cy-farm" element={<CYFarmAccess />} />
+    <Route path="/farm/access" element={<FarmAccess />} />
     <Route path="/admin/farm-command-center" element={<FarmAccessRoute><FarmCommandCenter /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/supervisor" element={<FarmAccessRoute roles={["supervisor"]}><FarmSupervisor /></FarmAccessRoute>} />
     <Route path="/admin/farm-command-center/reports" element={<FarmAccessRoute roles={["executive","operations","client"]}><FarmReports /></FarmAccessRoute>} />
