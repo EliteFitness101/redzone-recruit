@@ -12,3 +12,4 @@ Disallow: /login
 Disallow: /register
 
 Sitemap: https://martial.resofit.fit/sitemap.xml
+Disallow: /farm/access
