@@ -47,7 +47,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const onFirstInput = () => {
     if (started.current) return;
     started.current = true;
-    track("application_start", { source: "cy-nwankwo-farm-recruitment" });
+    track("application_start", { source: "farm-recruitment" });
   };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -65,7 +65,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     const attribution = getAttribution();
 
     const notes = [
-      "RECRUITMENT: CY NWANKWO FARM OPERATIONS",
+      "RECRUITMENT: FARM OPERATIONS",
       "POSITION: " + d.position,
       "INSTITUTION: " + d.institution,
       "GRADUATION YEAR: " + (d.graduation_year || "Not provided"),
@@ -86,8 +86,8 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
         education: d.qualification,
         prior_experience: d.farm_experience,
         program: d.position,
-        source: "cy-nwankwo-farm-recruitment",
-        campaign: "CY-NWANKWO-FARM-OPERATIONS",
+        source: "farm-recruitment",
+        campaign: "FARM-OPERATIONS",
         attribution: attribution as never,
         notes,
       });
@@ -103,7 +103,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
 
     const reference = application.reference_number || application.id;
     track("application_submit", {
-      source: "cy-nwankwo-farm-recruitment",
+      source: "farm-recruitment",
       position: d.position,
       location: d.location,
       application_reference: reference,
@@ -139,7 +139,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
               Build a <span className="text-gradient-gold">professional farm team.</span>
             </Heading>
             <p className="mt-5 text-muted-foreground md:text-lg max-w-xl">
-              CY Nwankwo Farm Operations is recruiting a seven-person team for cattle, goat and palm plantation operations at Ahiaba Ubi Autonomous Community, Isiala Ngwa North, Abia State.
+              Farm operations recruitment is open for qualified professionals and farm assistants across agricultural, livestock and field operations.
             </p>
 
             <div className="mt-8 grid sm:grid-cols-2 gap-3">
@@ -191,7 +191,7 @@ export const FarmRecruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
               </div>
               <div>
                 <h3 className="font-display text-xl font-bold">Start Your Application</h3>
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">Farm recruitment • Ahiaba Ubi</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">Farm recruitment</p>
               </div>
             </div>
 
