@@ -239,7 +239,7 @@ export const Navbar = () => {
             onMouseEnter={cancelFarmsClose}
             onMouseLeave={closeFarmsSoon}
           >
-            <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">CY Farm</div>
+            <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">Farm</div>
             {farmLinks.map((item) => (
               <Link
                 key={item.to}
