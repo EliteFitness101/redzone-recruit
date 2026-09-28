@@ -12,7 +12,7 @@ export const CONTACT = {
   whatsappNumber: "2348132255842", // international format, no +
   telegramHandle: "EliteNGRecruitBot",
   telegramGroup: "https://t.me/EliteNGRecruitBot",
-  email: "recruit@resofit.fit",
+  email: "", // Public contact is handled through the secure contact form; no administrator email is exposed.
   phone: "+2348132255842",
   instagram: "https://instagram.com/martialx",
   tiktok: "https://tiktok.com/@martialx",
