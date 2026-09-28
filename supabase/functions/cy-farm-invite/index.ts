@@ -32,7 +32,7 @@ export default {
     if (invitationError || !invitation) return Response.json({ ok: false, error: invitationError?.message || "Could not create invitation registry record." }, { status: 500, headers });
 
     const { data: invited, error: inviteError } = await ctx.supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: "https://martial.resofit.fit/cy-farm",
+      redirectTo: "https://martial.resofit.fit/farm/access",
       data: { farm_client_code: "CY", farm_access_role: accessRole, invitation_id: invitation.id },
     });
     if (inviteError || !invited?.user) {
