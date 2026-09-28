@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 type FarmRole = "owner" | "client" | "operations" | "supervisor" | "executive";
 
-export function FarmAccessRoute({ children, roles, clientId }: {
+export function FarmAccessRoute({ children, roles }: {
   children: React.ReactNode;
   roles?: FarmRole[];
 
