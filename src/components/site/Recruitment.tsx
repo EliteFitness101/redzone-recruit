@@ -57,7 +57,7 @@ const schema = z.object({
   farm_salary_expectation: z.string().trim().max(80),
 }).superRefine((d, ctx) => {
   if (d.application_track === "Farm Operations") {
-    if (!d.farm_position) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_position"], message: "Select the CY Farm position" });
+    if (!d.farm_position) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_position"], message: "Select the farm position" });
     if (!d.farm_unit) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_unit"], message: "Select the preferred farm unit" });
     if (!d.farm_qualification) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_qualification"], message: "Enter your qualification" });
     if (!d.farm_experience) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_experience"], message: "Describe your practical farm experience" });
@@ -90,7 +90,7 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     }
     const d = parsed.data;
     const attribution = getAttribution();
-    const program = d.application_track === "Farm Operations" ? `CY Farm Operations — ${d.farm_position}` : (PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest);
+    const program = d.application_track === "Farm Operations" ? `Farm Operations — ${d.farm_position}` : (PROGRAM_BY_INTEREST[d.training_interest] ?? d.training_interest);
     setBusy(true);
     const { data: application, error } = await supabase.from("applications").insert({
       full_name: d.full_name,
@@ -168,12 +168,12 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
       ...attribution,
     });
     toast.success("Application received", {
-      description: d.application_track === "Farm Operations" ? "Your CY Farm application has been received for verification." : "Admissions will reach you on WhatsApp within 24 hours.",
+      description: d.application_track === "Farm Operations" ? "Your farm application has been received for verification." : "Admissions will reach you on WhatsApp within 24 hours.",
     });
     form.reset();
     setTimeout(() => {
       window.open(
-        waLink(d.application_track === "Farm Operations" ? `Hi CY Farm Recruitment, I just submitted a farm application (${d.full_name}, ${d.location} — ${d.farm_position}). Please confirm next steps.` : `Hi Martial X Admissions, I just submitted an application (${d.full_name}, ${d.location} — ${d.training_interest}). Please onboard me.`),
+        waLink(d.application_track === "Farm Operations" ? `Hi Farm Recruitment, I just submitted a farm application (${d.full_name}, ${d.location} — ${d.farm_position}). Please confirm next steps.` : `Hi Martial X Admissions, I just submitted an application (${d.full_name}, ${d.location} — ${d.training_interest}). Please onboard me.`),
         "_blank",
       );
     }, 600);
@@ -273,13 +273,13 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
                 <Label htmlFor="application_track">Application Track</Label>
                 <select id="application_track" name="application_track" required value={applicationTrack} onChange={(e) => setApplicationTrack(e.target.value as "Security" | "Farm Operations")} className={selectCls}>
                   <option value="Security">Security / Martial X</option>
-                  <option value="Farm Operations">CY Farm Operations</option>
+                  <option value="Farm Operations">Farm Operations</option>
                 </select>
               </div>
 
               {applicationTrack === "Farm Operations" && (
                 <div className="rounded-2xl border border-gold/20 bg-gold/[.04] p-4 space-y-4">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gold"><Sprout className="h-4 w-4" /> CY Farm Application Details</div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gold"><Sprout className="h-4 w-4" /> Farm Application Details</div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div><Label htmlFor="farm_position">Position</Label><select id="farm_position" name="farm_position" required className={selectCls} defaultValue=""><option value="">Select position…</option>{CY_FARM_POSITIONS.map((p) => <option key={p}>{p}</option>)}</select></div>
                     <div><Label htmlFor="farm_unit">Preferred Farm Unit</Label><select id="farm_unit" name="farm_unit" required className={selectCls} defaultValue=""><option value="">Select unit…</option>{CY_FARM_UNITS.map((u) => <option key={u}>{u}</option>)}</select></div>
