@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Briefcase, CheckCircle2, MessageCircle, Send, ShieldCheck, Loader2, Sprout } from "lucide-react";
+import { Briefcase, CheckCircle2, MessageCircle, Send, ShieldCheck, Loader2, Sprout, ChevronLeft, ChevronRight, Code2, GraduationCap, Wrench, Shield, Tractor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +13,18 @@ import { Link } from "react-router-dom";
 import { waLink, tgLink } from "@/config/site";
 
 const perks = [
-  "Verified placement with licensed firms",
-  "₦80k–₦250k starting deployment salary range",
-  "Uniform, ID and basic kit provided on assignment",
-  "Promotion track to supervisor & close-protection",
+  "Structured sourcing, screening and shortlisting",
+  "Role-specific requirements confirmed before presentation",
+  "Clear candidate terms before acceptance or deployment",
+  "Professional handling of candidate privacy and records",
+];
+
+const OPPORTUNITY_CARDS = [
+  { title: "Farm & Production", eyebrow: "AGRICULTURE", description: "Livestock, crops, plantation, farm management, maintenance and modern production operations.", icon: Tractor, accent: "from-emerald-500/20 to-lime-500/5" },
+  { title: "Security", eyebrow: "PROTECTION", description: "Security operations, guarding, supervision, close-protection pathways and support roles.", icon: Shield, accent: "from-red-500/20 to-orange-500/5" },
+  { title: "IT & Digital", eyebrow: "TECHNOLOGY", description: "IT support, digital operations, web, data, automation, media and technology-enabled roles.", icon: Code2, accent: "from-cyan-500/20 to-blue-500/5" },
+  { title: "Academy", eyebrow: "TRAINING", description: "Structured learning pathways for security, fitness, professional development and practical skills.", icon: GraduationCap, accent: "from-gold/20 to-yellow-500/5" },
+  { title: "Skilled & Support", eyebrow: "SKILLS", description: "Drivers, technicians, maintenance, logistics, hospitality, facilities and field support.", icon: Wrench, accent: "from-violet-500/20 to-fuchsia-500/5" },
 ];
 
 const AGE_RANGES: Record<string, number> = {
@@ -54,7 +62,12 @@ const schema = z.object({
   farm_experience_years: z.string().trim().max(30),
   farm_experience: z.string().trim().max(1200),
   farm_availability: z.string().trim().max(80),
+  farm_start_date: z.string().trim().max(40),
+  farm_relocation: z.string().trim(),
+  farm_work_mode: z.string().trim(),
+  farm_schedule: z.string().trim().max(120),
   farm_salary_expectation: z.string().trim().max(80),
+  candidate_consent: z.literal("yes"),
 }).superRefine((d, ctx) => {
   if (d.application_track === "Farm Operations") {
     if (!d.farm_position) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_position"], message: "Select the farm position" });
@@ -62,6 +75,10 @@ const schema = z.object({
     if (!d.farm_qualification) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_qualification"], message: "Enter your qualification" });
     if (!d.farm_experience) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_experience"], message: "Describe your practical farm experience" });
     if (!d.farm_availability) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_availability"], message: "Enter your availability" });
+    if (!d.farm_start_date) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_start_date"], message: "Enter your expected start date" });
+    if (!d.farm_relocation) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_relocation"], message: "Select relocation readiness" });
+    if (!d.farm_work_mode) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_work_mode"], message: "Select your preferred work arrangement" });
+    if (!d.farm_schedule) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["farm_schedule"], message: "Describe your schedule availability" });
   }
 });
 
@@ -71,6 +88,8 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const [applicationTrack, setApplicationTrack] = useState<"Security" | "Farm Operations">("Security");
   const { user } = useAuth();
   const started = useRef(false);
+  const [opportunityIndex, setOpportunityIndex] = useState(0);
+  const opportunity = OPPORTUNITY_CARDS[opportunityIndex];
 
   const onFirstInput = () => {
     if (started.current) return;
@@ -110,7 +129,7 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
         profession: d.profession,
         security_experience: d.security_experience,
         training_interest: d.training_interest,
-        ...(d.application_track === "Farm Operations" ? { farm_position: d.farm_position, farm_unit: d.farm_unit, farm_qualification: d.farm_qualification, farm_experience_years: d.farm_experience_years, farm_experience: d.farm_experience, farm_availability: d.farm_availability, farm_salary_expectation: d.farm_salary_expectation } : {}),
+        ...(d.application_track === "Farm Operations" ? { farm_position: d.farm_position, farm_unit: d.farm_unit, farm_qualification: d.farm_qualification, farm_experience_years: d.farm_experience_years, farm_experience: d.farm_experience, farm_availability: d.farm_availability, farm_start_date: d.farm_start_date, farm_relocation: d.farm_relocation, farm_work_mode: d.farm_work_mode, farm_schedule: d.farm_schedule, farm_salary_expectation: d.farm_salary_expectation } : {}),
         attribution,
       }),
       user_id: user?.id ?? null,
@@ -154,6 +173,8 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
           source: d.application_track === "Farm Operations" ? "farm-recruitment" : "martial-x-web",
           farm_position: d.application_track === "Farm Operations" ? d.farm_position : null,
           farm_unit: d.application_track === "Farm Operations" ? d.farm_unit : null,
+          relocation_ready: d.application_track === "Farm Operations" ? d.farm_relocation : null,
+          work_mode: d.application_track === "Farm Operations" ? d.farm_work_mode : null,
         },
         adapters: ["martial-whatsapp"],
       },
@@ -195,9 +216,28 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
               Apply once. <span className="text-gradient-gold">Get deployed</span> for life.
             </Heading>
             <p className="mt-5 text-muted-foreground md:text-lg max-w-xl">
-              We screen, train and deploy disciplined recruits to Nigeria's most reputable
-              security firms. Fully licensed. Fully compliant.
+              One intake for verified opportunities across security, agriculture, technology,
+              academy pathways and practical skills. Final role terms are confirmed before candidate presentation.
             </p>
+
+            <div className="mt-8 rounded-3xl border border-border/60 overflow-hidden">
+              <div className={`min-h-[230px] bg-gradient-to-br ${opportunity.accent} p-6 md:p-7`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-xs uppercase tracking-[0.25em] text-gold">{opportunity.eyebrow}</div>
+                  <div className="flex gap-2">
+                    <button type="button" aria-label="Previous opportunity" className="h-10 w-10 rounded-full border border-border/70 bg-background/40 flex items-center justify-center hover:bg-background/70" onClick={() => setOpportunityIndex((i) => (i - 1 + OPPORTUNITY_CARDS.length) % OPPORTUNITY_CARDS.length)}><ChevronLeft className="h-4 w-4" /></button>
+                    <button type="button" aria-label="Next opportunity" className="h-10 w-10 rounded-full border border-border/70 bg-background/40 flex items-center justify-center hover:bg-background/70" onClick={() => setOpportunityIndex((i) => (i + 1) % OPPORTUNITY_CARDS.length)}><ChevronRight className="h-4 w-4" /></button>
+                  </div>
+                </div>
+                <div className="mt-7 flex items-start gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-background/60 border border-border/60 flex items-center justify-center shrink-0"><opportunity.icon className="h-7 w-7 text-gold" /></div>
+                  <div><h2 className="font-display text-2xl md:text-3xl font-bold">{opportunity.title}</h2><p className="mt-2 text-sm md:text-base text-muted-foreground max-w-xl">{opportunity.description}</p></div>
+                </div>
+                <div className="mt-7 flex gap-2" aria-label="Opportunity categories">
+                  {OPPORTUNITY_CARDS.map((card, i) => <button key={card.title} type="button" aria-label={`Show ${card.title}`} aria-current={i === opportunityIndex} className={`h-2 flex-1 rounded-full ${i === opportunityIndex ? "bg-gold" : "bg-border/60"}`} onClick={() => setOpportunityIndex(i)} />)}
+                </div>
+              </div>
+            </div>
 
             <ul className="mt-8 space-y-3">
               {perks.map((p) => (
@@ -293,7 +333,7 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
                     <div><Label htmlFor="farm_availability">Availability</Label><Input id="farm_availability" name="farm_availability" maxLength={80} placeholder="Immediate / 2 weeks / specific date" /></div>
                     <div><Label htmlFor="farm_salary_expectation">Salary Expectation</Label><Input id="farm_salary_expectation" name="farm_salary_expectation" maxLength={80} placeholder="Optional — state expectation" /></div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Farm applications remain subject to workforce-gap confirmation, verification and CY interview/consideration.</p>
+                  <div className="grid sm:grid-cols-2 gap-4"><div><Label htmlFor="farm_relocation">Ready to Relocate?</Label><select id="farm_relocation" name="farm_relocation" required className={selectCls} defaultValue=""><option value="">Select…</option><option>Yes — ready to relocate</option><option>Yes — with notice</option><option>Not currently</option></select></div><div><Label htmlFor="farm_work_mode">Work Arrangement</Label><select id="farm_work_mode" name="farm_work_mode" required className={selectCls} defaultValue=""><option value="">Select…</option><option>Live-in / on-site</option><option>Daily reporting</option><option>Open to either</option></select></div></div><div className="grid sm:grid-cols-2 gap-4"><div><Label htmlFor="farm_start_date">Expected Start</Label><Input id="farm_start_date" name="farm_start_date" type="date" required className="mt-1.5" /></div><div><Label htmlFor="farm_schedule">Schedule Availability</Label><Input id="farm_schedule" name="farm_schedule" required maxLength={120} placeholder="Full-time / shift / days off..." className="mt-1.5" /></div></div><p className="text-[11px] text-muted-foreground">Accommodation, schedule, compensation and contract terms are confirmed with shortlisted candidates before acceptance. This intake does not guarantee placement.</p>
                 </div>
               )}
 
@@ -336,6 +376,8 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
                   </select>
                 </div>
               </div>
+
+              <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/30 p-3 text-xs text-muted-foreground"><input type="checkbox" name="candidate_consent" value="yes" required className="mt-0.5 h-4 w-4 accent-gold" /><span>I confirm that the information supplied is accurate and consent to its use for recruitment screening, verification and candidate communication under the published privacy and recruitment policies.</span></label>
 
               <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>
                 {busy ? <Loader2 className="animate-spin" /> : "Submit Application"}
