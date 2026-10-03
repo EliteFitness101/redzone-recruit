@@ -27,6 +27,15 @@ const OPPORTUNITY_CARDS = [
   { title: "Skilled & Support", eyebrow: "SKILLS", description: "Drivers, technicians, maintenance, logistics, hospitality, facilities and field support.", icon: Wrench, accent: "from-violet-500/20 to-fuchsia-500/5" },
 ];
 
+const HERO_VIDEO_URLS = [
+  "https://ab2ttlkn9no0tuoa.public.blob.vercel-storage.com/buffer/assets/martial/farm/Abia_development_film_opening_dawn_20261003140227.mp4",
+  "https://ab2ttlkn9no0tuoa.public.blob.vercel-storage.com/buffer/assets/martial/farm/Agricultural_estate_recruitment_%E2%80%A6_20261003135051.mp4",
+  "https://ab2ttlkn9no0tuoa.public.blob.vercel-storage.com/buffer/assets/martial/farm/Community_support_and_youth_empo%E2%80%A6_20261003140803.mp4",
+  "https://ab2ttlkn9no0tuoa.public.blob.vercel-storage.com/buffer/assets/martial/farm/Digital_agricultural_industriali%E2%80%A6_20261003135549.mp4",
+  "https://ab2ttlkn9no0tuoa.public.blob.vercel-storage.com/buffer/assets/martial/farm/Ecosystem_framework_video_produc%E2%80%A6_20261003142204.mp4",
+  "https://ab2ttlkn9no0tuoa.public.blob.vercel-storage.com/buffer/assets/martial/farm/Visualizing_ResoFlex_AIM_AbiaPOD%E2%80%A6_20261003140559.mp4",
+];
+
 const AGE_RANGES: Record<string, number> = {
   "18–24": 21,
   "25–34": 29,
@@ -89,6 +98,7 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
   const { user } = useAuth();
   const started = useRef(false);
   const [opportunityIndex, setOpportunityIndex] = useState(0);
+  const [heroVideoIndex, setHeroVideoIndex] = useState(0);
   const opportunity = OPPORTUNITY_CARDS[opportunityIndex];
 
   const onFirstInput = () => {
@@ -204,8 +214,25 @@ export const Recruitment = ({ asH1 = false }: { asH1?: boolean } = {}) => {
     "mt-1.5 flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
-    <section id="recruitment" className="relative py-20 md:py-28">
-      <div className="absolute inset-0 bg-gradient-tactical opacity-60" />
+    <section id="recruitment" className="relative overflow-hidden py-20 md:py-28">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        {HERO_VIDEO_URLS.map((src, i) => (
+          <video
+            key={src}
+            className={`absolute inset-0 h-full w-full object-cover scale-105 blur-[8px] transition-opacity duration-1000 ${i === heroVideoIndex ? "opacity-30" : "opacity-0"}`}
+            src={src}
+            autoPlay={i === heroVideoIndex}
+            muted
+            loop
+            playsInline
+            preload={i === 0 ? "auto" : "metadata"}
+            onEnded={() => setHeroVideoIndex((current) => (current + 1) % HERO_VIDEO_URLS.length)}
+          />
+        ))}
+        <div className="absolute inset-0 bg-background/65" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/45 to-background/85" />
+      </div>
+      <div className="absolute inset-0 bg-gradient-tactical opacity-40 pointer-events-none" />
       <div className="container relative">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           <div>
