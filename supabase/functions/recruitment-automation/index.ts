@@ -2,7 +2,7 @@
 // Runs the post-submission workflow for an application:
 //  - canonical application event written to Supabase
 //  - recruiter + admin notifications (in-app)
-//  - ChatB2K handoff through the canonical event ledger
+//  - ChatB2K-compatible canonical event persisted for downstream consumption
 //  - CRM activity creation
 //  - internal email/follow-up queue markers (not falsely reported as delivered)
 // Every step is recorded in automation_runs with an idempotency key so retries are safe.
