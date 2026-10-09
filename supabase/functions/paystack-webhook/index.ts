@@ -4,23 +4,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { createHmac } from "node:crypto";
 
 const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY")!;
-const MAKE_WEBHOOK = "https://hook.eu1.make.com/p0c26asklninfrxhp2sw6nkdjjb19a89";
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
-
-async function fireAutomation(payload: unknown) {
-  try {
-    await fetch(MAKE_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    console.error("[make-webhook] failed", e);
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("method", { status: 405 });
@@ -62,18 +49,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fire Make.com automation (receipt email, CRM sync, etc.)
-    await fireAutomation({
-      event: "payment_success",
-      reference: data.reference,
-      email: order?.email ?? data.customer?.email,
-      tier: order?.tier,
-      amount_kobo: order?.amount_kobo,
-      user_id: order?.user_id,
-      referral_code: order?.referral_code,
-      paid_at: data.paid_at,
-      channel: data.channel,
-    });
+    // Canonical internal event replaces the retired Make webhook.
+    const { error: canonicalEventError } = await admin.from("resofit_events").upsert({
+      event_name: "payment.succeeded",
+      contract_version: "1.0",
+      occurred_at: data.paid_at ?? new Date().toISOString(),
+      source_system: "redzone-recruit-paystack-webhook",
+      idempotency_key: `paystack:payment.succeeded:${data.reference}`,
+      correlation_id: String(data.reference),
+      payload: {
+        payment_reference: String(data.reference),
+        amount: Number(data.amount) / 100,
+        currency: String(data.currency ?? "NGN"),
+        customer_email: order?.email ?? data.customer?.email ?? null,
+        tier: order?.tier ?? null,
+        user_id: order?.user_id ?? null,
+        referral_code: order?.referral_code ?? null,
+        paid_at: data.paid_at ?? null,
+        channel: data.channel ?? null,
+      },
+    }, { onConflict: "idempotency_key", ignoreDuplicates: true });
+    if (canonicalEventError) throw canonicalEventError;
   }
   return new Response("ok", { status: 200 });
 });
