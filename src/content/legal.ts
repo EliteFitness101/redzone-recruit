@@ -40,7 +40,7 @@ export const LEGAL_DOCS: LegalDoc[] = [
         heading: "Sharing",
         body: [
           "With licensed client security firms only where you are being considered for deployment.",
-          "With processors that run the platform: our cloud database/auth provider, Paystack (payments) and Make.com (workflow automation).",
+          "With processors that run the platform: our cloud database/auth provider and Paystack (payments). Internal workflow orchestration is handled by Supabase; any optional delivery provider is enabled only when explicitly configured.",
           "Where required by Nigerian law or lawful regulatory request.",
         ],
       },
