@@ -12,25 +12,12 @@ const PAYSTACK_SECRET = Deno.env.get("PAYSTACK_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-const MAKE_WEBHOOK = "https://hook.eu1.make.com/p0c26asklninfrxhp2sw6nkdjjb19a89";
 
 const TIER_AMOUNTS: Record<string, number> = {
   basic: 100_000,
   elite: 1_000_000,
   vip: 3_000_000,
 };
-
-async function fireAutomation(payload: unknown) {
-  try {
-    await fetch(MAKE_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    console.error("[make-webhook] failed", e);
-  }
-}
 
 async function getUserId(req: Request): Promise<string | null> {
   const auth = req.headers.get("Authorization");
@@ -142,18 +129,34 @@ Deno.serve(async (req) => {
             });
           }
         }
-        await fireAutomation({
-          event: "payment_success",
-          reference,
-          email: order.email,
-          tier: order.tier,
-          amount_kobo: order.amount_kobo,
-          user_id: order.user_id,
-          referral_code: order.referral_code,
-        });
+        // Reconcile to the canonical event ledger; idempotency key is shared
+        // with the signed webhook so verify + webhook cannot create duplicates.
+        const { error: eventError } = await admin.from("resofit_events").upsert({
+          event_name: "payment.succeeded",
+          contract_version: "1.0",
+          occurred_at: new Date().toISOString(),
+          source_system: "redzone-recruit-paystack-verify",
+          idempotency_key: `paystack:payment.succeeded:${reference}`,
+          correlation_id: reference,
+          payload: {
+            payment_reference: reference,
+            amount: Number(order.amount_kobo) / 100,
+            currency: "NGN",
+            customer_email: order.email ?? null,
+            tier: order.tier ?? null,
+            user_id: order.user_id ?? null,
+            referral_code: order.referral_code ?? null,
+          },
+        }, { onConflict: "idempotency_key", ignoreDuplicates: true });
+        if (eventError) throw eventError;
       }
       if (status === "failed") {
-        await fireAutomation({ event: "payment_failed", reference, email: order?.email });
+        const { error: auditError } = await admin.from("audit_logs").insert({
+          action: "payment.failed",
+          resource: "payment",
+          metadata: { reference, email: order?.email ?? null, source: "redzone-recruit-paystack-verify" },
+        });
+        if (auditError) throw auditError;
       }
       return json({ status, order });
     }
