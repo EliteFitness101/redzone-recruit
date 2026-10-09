@@ -99,6 +99,9 @@ Deno.serve(async (req) => {
         workflow: 'canonical_event_dispatch',
         channel: 'supabase',
         run: async (p) => {
+          if (typeof p.phone !== 'string' || !p.phone.trim()) {
+            throw new Error('Application phone is required by the application.submitted event contract');
+          }
           const { error } = await admin.from('resofit_events').upsert({
             event_name: 'application.submitted',
             contract_version: '1.0',
