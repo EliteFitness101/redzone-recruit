@@ -1,17 +1,13 @@
 // Recruitment automation orchestrator.
 // Runs the post-submission workflow for an application:
-//  - applicant confirmation email (via Make)
+//  - canonical application event written to Supabase
 //  - recruiter + admin notifications (in-app)
-//  - Make automation trigger
-//  - ChatB2K orchestration event
+//  - ChatB2K handoff through the canonical event ledger
 //  - CRM activity creation
-//  - follow-up communication sequence enqueue
+//  - internal email/follow-up queue markers (not falsely reported as delivered)
 // Every step is recorded in automation_runs with an idempotency key so retries are safe.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-
-const MAKE_WEBHOOK = 'https://hook.eu1.make.com/p0c26asklninfrxhp2sw6nkdjjb19a89';
-const CHATB2K_WEBHOOK = Deno.env.get('CHATB2K_WEBHOOK_URL') ?? '';
 
 type Step = {
   workflow: string;
@@ -60,23 +56,16 @@ Deno.serve(async (req) => {
       created_at: app.created_at,
     };
 
-    const post = (url: string, event: string) => async (p: Record<string, unknown>) => {
-      if (!url) return { skipped: true, reason: 'webhook not configured' };
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event, data: p }),
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`[${res.status}] ${text.slice(0, 400)}`);
-      return { status: res.status, body: text.slice(0, 400) };
-    };
-
     const steps: Step[] = [
       {
         workflow: 'applicant_confirmation_email',
-        channel: 'email',
-        run: post(MAKE_WEBHOOK, 'application.confirmation_email'),
+        channel: 'internal_queue',
+        run: async () => ({
+          queued: true,
+          delivered: false,
+          provider_required: 'transactional_email',
+          reason: 'No external automation provider invoked; delivery remains pending until an approved email transport is configured.',
+        }),
       },
       {
         workflow: 'staff_notification',
@@ -106,8 +95,46 @@ Deno.serve(async (req) => {
           return { inserted: rows.length };
         },
       },
-      { workflow: 'make_automation', channel: 'webhook', run: post(MAKE_WEBHOOK, 'application.created') },
-      { workflow: 'chatb2k_orchestration', channel: 'webhook', run: post(CHATB2K_WEBHOOK, 'application.created') },
+      {
+        workflow: 'canonical_event_dispatch',
+        channel: 'supabase',
+        run: async (p) => {
+          const { error } = await admin.from('resofit_events').upsert({
+            event_name: 'application.submitted',
+            contract_version: '1.0',
+            occurred_at: app.created_at ?? new Date().toISOString(),
+            source_system: 'redzone-recruit',
+            idempotency_key: `recruitment:application.submitted:${app.id}`,
+            correlation_id: String(app.reference_number ?? app.id),
+            payload: {
+              application_id: p.application_id,
+              full_name: p.full_name,
+              phone: p.phone,
+              email: p.email ?? null,
+              location: p.location ?? null,
+              program: p.program ?? null,
+              cohort: p.cohort ?? null,
+              stage: p.stage ?? null,
+              source: p.source ?? null,
+              campaign: p.campaign ?? null,
+              attribution: p.attribution ?? {},
+            },
+          }, { onConflict: 'idempotency_key', ignoreDuplicates: true });
+          if (error) throw error;
+          return { persisted: true, event_name: 'application.submitted' };
+        },
+      },
+      {
+        workflow: 'chatb2k_orchestration',
+        channel: 'canonical_event',
+        run: async () => ({
+          queued: true,
+          delivered: false,
+          event_name: 'application.submitted',
+          source: 'resofit_events',
+          reason: 'ChatB2K consumes the canonical event contract; no external webhook invoked.',
+        }),
+      },
       {
         workflow: 'crm_activity',
         channel: 'internal',
@@ -124,8 +151,13 @@ Deno.serve(async (req) => {
       },
       {
         workflow: 'follow_up_sequence',
-        channel: 'sequence',
-        run: post(MAKE_WEBHOOK, 'application.follow_up_sequence'),
+        channel: 'internal_queue',
+        run: async () => ({
+          queued: true,
+          delivered: false,
+          provider_required: 'follow_up_worker',
+          reason: 'Follow-up intent recorded internally; no external automation provider invoked.',
+        }),
       },
     ];
 
@@ -141,6 +173,10 @@ Deno.serve(async (req) => {
 
       if (existing?.status === 'success') {
         results[step.workflow] = 'already_succeeded';
+        continue;
+      }
+      if (existing?.status === 'queued' && !retryOnly) {
+        results[step.workflow] = 'queued_provider_required';
         continue;
       }
       if (retryOnly && !existing) {
@@ -167,10 +203,11 @@ Deno.serve(async (req) => {
 
       try {
         const response = await step.run(payload);
+        const queued = Boolean(response && typeof response === 'object' && (response as Record<string, unknown>).queued === true);
         await admin.from('automation_runs')
-          .update({ status: 'success', response, last_error: null })
+          .update({ status: queued ? 'queued' : 'success', response, last_error: null })
           .eq('idempotency_key', key);
-        results[step.workflow] = 'success';
+        results[step.workflow] = queued ? 'queued_provider_required' : 'success';
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         console.error(`automation ${step.workflow} failed:`, message);
