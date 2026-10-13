@@ -27,12 +27,24 @@ export default function Auth() {
   const [tab, setTab] = useState<"login" | "register">(initial);
   const [busy, setBusy] = useState(false);
   const [recovery, setRecovery] = useState(recoveryMode);
+  const [recoveryCooldown, setRecoveryCooldown] = useState(() => Math.max(0, Math.ceil((Number(localStorage.getItem("martialx_recovery_cooldown_until")) - Date.now()) / 1000)));
+  const [recoveryNotice, setRecoveryNotice] = useState("");
   const [remember, setRemember] = useState(localStorage.getItem("martialx_remember") !== "false");
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") setRecovery(true); });
     return () => data.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (recoveryCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((Number(localStorage.getItem("martialx_recovery_cooldown_until")) - Date.now()) / 1000));
+      setRecoveryCooldown(remaining);
+      if (remaining === 0) localStorage.removeItem("martialx_recovery_cooldown_until");
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [recoveryCooldown > 0]);
 
   useEffect(() => { if (session && !recovery) nav(next, { replace: true }); }, [session, nav, next, recovery]);
 
@@ -68,13 +80,36 @@ export default function Auth() {
   };
 
   const onForgot = async () => {
+    if (busy) return;
+    const storedUntil = Number(localStorage.getItem("martialx_recovery_cooldown_until"));
+    const remaining = Math.max(0, Math.ceil((storedUntil - Date.now()) / 1000));
+    if (remaining > 0) {
+      setRecoveryCooldown(remaining);
+      setRecoveryNotice(`Please wait ${remaining} seconds before requesting another email. If email delivery is still limited, wait a few minutes longer.`);
+      return;
+    }
     const email = emailSchema.safeParse((document.getElementById("email-l") as HTMLInputElement)?.value);
-    if (!email.success) return toast.error("Enter your email first");
+    if (!email.success) return toast.error("Enter a valid email first");
     setBusy(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.data, { redirectTo: `${window.location.origin}/login?mode=recovery` });
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Password reset instructions sent.");
+    if (error) {
+      const message = `${error.message ?? ""} ${("code" in error && error.code) || ""}`;
+      if (/429|rate.?limit|over_email_send_rate_limit|too many/i.test(message)) {
+        const until = Date.now() + 5 * 60 * 1000;
+        localStorage.setItem("martialx_recovery_cooldown_until", String(until));
+        setRecoveryCooldown(300);
+        setRecoveryNotice("Email sending is temporarily rate-limited. Please wait five minutes before trying again; the provider may require a longer cooldown.");
+        return toast.error("Email rate limit reached. Please wait before retrying.");
+      }
+      setRecoveryNotice("We couldn't submit the reset request. Check your connection and try again later.");
+      return toast.error(error.message);
+    }
+    const until = Date.now() + 30 * 1000;
+    localStorage.setItem("martialx_recovery_cooldown_until", String(until));
+    setRecoveryCooldown(30);
+    setRecoveryNotice("If an account matches that email, reset instructions are on the way. Check your inbox and spam folder; avoid requesting another email while you wait.");
+    toast.success("If an account matches that email, reset instructions are on the way.");
   };
 
   const onRecovery = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -106,7 +141,8 @@ export default function Auth() {
               <div><Label htmlFor="email-l">Email</Label><Input id="email-l" name="email" type="email" required className="mt-1.5" autoComplete="email" /></div>
               <div><Label htmlFor="password-l">Password</Label><Input id="password-l" name="password" type="password" required className="mt-1.5" autoComplete="current-password" /></div>
               <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me on this device</label>
-              <div className="flex items-center justify-between text-xs"><button type="button" onClick={onForgot} className="text-gold hover:underline inline-flex items-center gap-1"><KeyRound className="h-3 w-3" /> Forgot password?</button><span className="text-muted-foreground">Secure Supabase Auth</span></div>
+              <div className="flex items-center justify-between text-xs"><button type="button" onClick={onForgot} disabled={busy || recoveryCooldown > 0} className="text-gold hover:underline inline-flex items-center gap-1 disabled:opacity-50 disabled:no-underline"><KeyRound className="h-3 w-3" /> {recoveryCooldown > 0 ? `Try again in ${recoveryCooldown}s` : "Forgot password?"}</button><span className="text-muted-foreground">Secure Supabase Auth</span></div>
+              {recoveryNotice && <p role="status" aria-live="polite" className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">{recoveryNotice}</p>}
               <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : "Sign In"}</Button>
             </form></TabsContent>
             <TabsContent value="register"><form onSubmit={onRegister} className="space-y-4">
