@@ -74,11 +74,17 @@ export default function Auth() {
     const full_name = nameSchema.safeParse(fd.get("full_name"));
     if (!email.success || !password.success || !full_name.success) return toast.error("Check name, email and password");
     setBusy(true);
-    const { error } = await supabase.auth.signUp({ email: email.data, password: password.data, options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { full_name: full_name.data, referred_by: referred } } });
+    const { data, error } = await supabase.auth.signUp({ email: email.data, password: password.data, options: { emailRedirectTo: `${window.location.origin}/dashboard`, data: { full_name: full_name.data, referred_by: referred } } });
     setBusy(false);
     if (error) return toast.error(error.message);
     track("signup"); if (referred) track("referral_signup", { code: referred });
-    toast.success("Account created — you're in."); nav(next, { replace: true });
+    if (data.session) {
+      toast.success("Account created successfully.");
+      nav(next, { replace: true });
+    } else {
+      toast.success("Account created. Check your email to confirm your address, then sign in.");
+      setTab("login");
+    }
   };
 
   const onForgot = async () => {
