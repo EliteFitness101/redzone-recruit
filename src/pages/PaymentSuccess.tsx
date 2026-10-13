@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { useAuth } from "@/lib/auth";
 import { CONTACT, waLink } from "@/config/site";
 
 export default function PaymentSuccess() {
   const [sp] = useSearchParams();
+  const { user } = useAuth();
   const reference = sp.get("reference") || sp.get("trxref");
   const [state, setState] = useState<"loading" | "ok" | "fail">("loading");
   const [tier, setTier] = useState<string>("");
@@ -42,15 +44,24 @@ export default function PaymentSuccess() {
             <CheckCircle2 className="h-14 w-14 text-gold mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold mb-2">You're in.</h1>
             <p className="text-muted-foreground mb-6">
-              Your <span className="text-gold uppercase">{tier}</span> training is activated. Next up: onboarding.
+              {user ? <>Your <span className="text-gold uppercase">{tier}</span> payment is verified. Your training access is ready — start your first lesson.</> : <>Payment verified for <span className="text-gold uppercase">{tier}</span>. Sign in or create an account using the same email you paid with. After email verification, your academy access will link automatically.</>}
             </p>
             <div className="grid gap-3">
-              <Button variant="hero" asChild>
-                <Link to="/academy">Start training in Academy</Link>
-              </Button>
-              <Button variant="glass" asChild>
-                <Link to="/dashboard">Go to Dashboard</Link>
-              </Button>
+              {user ? <>
+                <Button variant="hero" asChild>
+                  <Link to="/academy">Start training in Academy</Link>
+                </Button>
+                <Button variant="glass" asChild>
+                  <Link to="/dashboard">Go to Dashboard</Link>
+                </Button>
+              </> : <>
+                <Button variant="hero" asChild>
+                  <Link to={`/login?next=${encodeURIComponent("/academy")}`}>Sign in to unlock training</Link>
+                </Button>
+                <Button variant="glass" asChild>
+                  <Link to={`/register?next=${encodeURIComponent("/academy")}`}>Create account with same email</Link>
+                </Button>
+              </>}
               <Button variant="gold" asChild>
                 <a
                   href={waLink(`Hi, I just paid for ${tier}. Ref: ${reference}. Please onboard me.`)}
