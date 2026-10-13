@@ -15,14 +15,14 @@ export default function PaymentSuccess() {
 
   useEffect(() => {
     if (!reference) return setState("fail");
-    supabase.functions.invoke("paystack", { body: { action: "verify", reference } }).then(({ data, error }) => {
-      if (error || data?.status !== "success") {
+    supabase.functions.invoke("verify-order", { body: { reference } }).then(({ data, error }) => {
+      if (error || data?.status !== "paid") {
         track("payment_failed", { reference });
         setState("fail");
         return;
       }
-      setTier(data.order?.tier ?? "");
-      track("payment_success", { reference, tier: data.order?.tier, amount: data.order?.amount_kobo });
+      setTier(data.experience?.product_name ?? data.experience?.product_sku ?? "training");
+      track("payment_success", { reference, tier: data.experience?.product_sku ?? data.experience?.product_name, amount: data.amount });
       setState("ok");
     });
   }, [reference]);
