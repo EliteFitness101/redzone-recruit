@@ -37,14 +37,13 @@ export default function Auth() {
   }, []);
 
   useEffect(() => {
-    if (recoveryCooldown <= 0) return;
     const timer = window.setInterval(() => {
       const remaining = Math.max(0, Math.ceil((Number(localStorage.getItem("martialx_recovery_cooldown_until")) - Date.now()) / 1000));
-      setRecoveryCooldown(remaining);
+      setRecoveryCooldown((current) => current === remaining ? current : remaining);
       if (remaining === 0) localStorage.removeItem("martialx_recovery_cooldown_until");
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [recoveryCooldown > 0]);
+  }, []);
 
   useEffect(() => { if (session && !recovery) nav(next, { replace: true }); }, [session, nav, next, recovery]);
 
