@@ -5,7 +5,7 @@ const SUPABASE_URL='https://vbqjvmnhdtdhmeeudqnn.supabase.co',SUPABASE_PUBLISHAB
 function isNewSupabaseApiKey(value:string):boolean{return value.startsWith('sb_publishable_')||value.startsWith('sb_secret_');}
 function createSupabaseFetch(supabaseKey:string):typeof fetch{return(input,init)=>{const headers=new Headers(typeof Request!=='undefined'&&input instanceof Request?input.headers:undefined);if(init?.headers)new Headers(init.headers).forEach((value,key)=>headers.set(key,value));if(isNewSupabaseApiKey(supabaseKey)&&headers.get('Authorization')===`Bearer ${supabaseKey}`)headers.delete('Authorization');headers.set('apikey',supabaseKey);return fetch(input,{...init,headers});};}
 const SHARED_AUTH_COOKIE='rf_auth_session_v1',COOKIE_CHUNK_SIZE=2800;
-function sharedCookieEnabled(){return typeof window!=='undefined'&&(window.location.hostname==='resofit.fit'||window.location.hostname.endsWith('.resofit.fit'));}
+function sharedCookieEnabled(){return typeof window!=='undefined'&&(window.location.hostname==='resofit.fit'||(window.location.hostname.endsWith('.resofit.fit')&&window.location.hostname!=='martial.resofit.fit'));}
 function readCookie(name:string){const prefix=name+'=';const part=sharedCookieEnabled()?document.cookie.split('; ').find(e=>e.startsWith(prefix)):null;return part?decodeURIComponent(part.slice(prefix.length)):null;}
 function writeCookie(name:string,value:string,maxAge=31536000){document.cookie=name+'='+encodeURIComponent(value)+'; Max-Age='+maxAge+'; Path=/; Domain=.resofit.fit; Secure; SameSite=Lax';}
 function clearCookie(name:string){writeCookie(name,'',0);}
