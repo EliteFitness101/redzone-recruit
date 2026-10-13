@@ -46,6 +46,9 @@ export default function PaymentSuccess() {
             </p>
             <div className="grid gap-3">
               <Button variant="hero" asChild>
+                <Link to="/academy">Start training in Academy</Link>
+              </Button>
+              <Button variant="glass" asChild>
                 <Link to="/dashboard">Go to Dashboard</Link>
               </Button>
               <Button variant="gold" asChild>
