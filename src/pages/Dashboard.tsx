@@ -48,7 +48,7 @@ export default function Dashboard() {
           <StatCard icon={GraduationCap} label="Active courses" value={enrollments.length} />
           <StatCard icon={Receipt} label="Payments" value={orders.filter(o => o.status === "success").length} />
           <StatCard icon={Users2} label="Referrals" value={referralCount} />
-          <StatCard icon={ShieldCheck} label="Deployment" value={roles.includes("student") ? "Ready" : "Pending"} />
+          <StatCard icon={ShieldCheck} label="Deployment" value={roles.includes("player") ? "Ready" : "Pending"} />
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
