@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [referralCount, setReferralCount] = useState(0);
+  const [completedLessons, setCompletedLessons] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -24,6 +25,8 @@ export default function Dashboard() {
       .then(({ data }) => setEnrollments(data ?? []));
     supabase.from("referrals").select("id", { count: "exact", head: true }).eq("affiliate_id", user.id)
       .then(({ count }) => setReferralCount(count ?? 0));
+    supabase.from("lesson_progress").select("id", { count: "exact", head: true }).eq("user_id", user.id).not("completed_at", "is", null)
+      .then(({ count, error }) => { if (!error) setCompletedLessons(count ?? 0); });
   }, [user]);
 
   const isAdmin = roles.includes("admin");
@@ -44,8 +47,9 @@ export default function Dashboard() {
           <Button variant="glass" size="sm" onClick={signOut}><LogOut className="h-4 w-4" /> Sign out</Button>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-4 mb-10">
-          <StatCard icon={GraduationCap} label="Active courses" value={enrollments.length} />
+        <div className="grid md:grid-cols-5 gap-4 mb-10">
+          <StatCard icon={GraduationCap} label="Active courses" value={enrollments.filter(e => e.active).length} />
+          <StatCard icon={GraduationCap} label="Lessons completed" value={completedLessons} />
           <StatCard icon={Receipt} label="Payments" value={orders.filter(o => o.status === "success").length} />
           <StatCard icon={Users2} label="Referrals" value={referralCount} />
           <StatCard icon={ShieldCheck} label="Deployment" value={roles.includes("player") ? "Ready" : "Pending"} />
